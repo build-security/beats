@@ -116,6 +116,12 @@ func (p *pod) GenerateK8s(obj kubernetes.Resource, opts ...FieldOptions) common.
 		out.Put("pod.ip", po.Status.PodIP)
 	}
 
+	if p.resource.config.IncludeSpec {
+		if tier, ok := po.Labels["tier"]; ok && tier == "control-plane" {
+			out.Put("pod.spec", po.Spec)
+		}
+	}
+
 	return out
 }
 

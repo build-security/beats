@@ -120,6 +120,8 @@ data:
       # remove ssl.verification_mode entry and use the CA, for instance:
       #ssl.certificate_authorities:
         #- /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+      # To include pod spec of the control-plane tier pods (default false):
+      #include_spec: true
     # Currently `proxy` metricset is not supported on Openshift, comment out section
     - module: kubernetes
       metricsets:

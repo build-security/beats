@@ -28,6 +28,7 @@ type Config struct {
 
 	LabelsDedot      bool `config:"labels.dedot"`
 	AnnotationsDedot bool `config:"annotations.dedot"`
+	IncludeSpec      bool `config:"include_spec"`
 }
 
 // AddResourceMetadataConfig allows adding config for enriching additional resources
@@ -40,6 +41,7 @@ type AddResourceMetadataConfig struct {
 func (c *Config) InitDefaults() {
 	c.LabelsDedot = true
 	c.AnnotationsDedot = true
+	c.IncludeSpec = false
 }
 
 // Unmarshal unpacks a Config into the metagen Config

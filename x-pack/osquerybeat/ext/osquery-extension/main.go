@@ -38,7 +38,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/internal/tables"
 	"github.com/osquery/osquery-go"
+	"github.com/osquery/osquery-go/plugin/table"
 )
 
 var (
@@ -76,10 +78,15 @@ func main() {
 
 	// Register the tables avaiable for the specific pltaform build
 	RegisterTables(server)
+	RegisterKubeTables(server)
 
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func RegisterKubeTables(server *osquery.ExtensionManagerServer) {
+	server.RegisterPlugin(table.NewPlugin("kube_pods", tables.KubePodsColumns(), tables.GetKubePodsGenerateFunc()))
 }
 
 // continuously monitor for ppid and exit if osqueryd is no longer the parent process.

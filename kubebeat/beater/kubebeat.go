@@ -2,12 +2,13 @@ package beater
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	"time"
 )
 
 // kubebeat configuration.
@@ -25,23 +26,26 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, fmt.Errorf("error reading config file: %v", err)
 	}
 
+	logp.Info("Config initiated.")
+
 	client, err := kubernetes.GetKubernetesClient(c.KubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get k8sclient client: %s", err.Error())
 	}
+
+	logp.Info("Client initiated.")
 
 	watchOptions := kubernetes.WatchOptions{
 		SyncTimeout: c.Period,
 		Namespace:   "kube-system",
 	}
 
-	watcher, err := kubernetes.NewWatcher(client, &kubernetes.Event{}, watchOptions, nil)
+	watcher, err := kubernetes.NewWatcher(client, &kubernetes.Pod{}, watchOptions, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fail to init k8sclient watcher: %s", err.Error())
 	}
 
-	var Handler EventHandler
-	watcher.AddEventHandler(Handler)
+	logp.Info("Watcher initiated.")
 
 	bt := &kubebeat{
 		done:    make(chan struct{}),
@@ -56,8 +60,12 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 func (bt *kubebeat) Run(b *beat.Beat) error {
 	logp.Info("kubebeat is running! Hit CTRL-C to stop it.")
 
-	var err error
-	err = bt.watcher.Start()
+	err := bt.watcher.Start()
+	if err != nil {
+		return err
+	}
+
+	bt.client, err = b.Publisher.Connect()
 	if err != nil {
 		return err
 	}
@@ -69,36 +77,39 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			return nil
 		case <-ticker.C:
 		}
-	//
-	//	pods, err := bt.watcher.CoreV1().Pods("kube-system").List(context.TODO(),
-	//		metav1.ListOptions{
-	//			LabelSelector: "tier=control-plane",
-	//		})
-	//	timestamp := time.Now()
-	//	if err != nil {
-	//		logp.Error(fmt.Errorf("error fetching pods data: %v", err))
-	//		continue
-	//	}
-	//
-	//	events := make([]beat.Event, len(pods.Items))
-	//
-	//	for _, item := range pods.Items {
-	//
-	//		item.SetManagedFields(nil)
-	//		item.Status.Reset()
-	//
-	//		event := beat.Event{
-	//			Timestamp: timestamp,
-	//			Fields: common.MapStr{
-	//				"type": b.Info.Name,
-	//				"pod":  item,
-	//			},
-	//		}
-	//		events = append(events, event)
-	//	}
-	//
-	//	bt.client.PublishAll(events)
-		logp.Info("Events sent")
+
+		pods := bt.watcher.Store().List()
+		events := make([]beat.Event, len(pods))
+		timestamp := time.Now()
+
+		for i, p := range pods {
+			pod, ok := p.(*kubernetes.Pod)
+			if !ok {
+				logp.Info("could not convert to pod")
+			}
+
+			pod.SetManagedFields(nil)
+			pod.Status.Reset()
+
+			event := beat.Event{
+				Timestamp: timestamp,
+				Fields: common.MapStr{
+					"type":             b.Info.Name,
+					"uid":              string(pod.UID), // UID is an alias to string
+					"name":             pod.Name,
+					"namespace":        pod.Namespace,
+					"ip":               pod.Status.PodIP,
+					"phase":            string(pod.Status.Phase),
+					"service_account":  pod.Spec.ServiceAccountName,
+					"node_name":        pod.Spec.NodeName,
+					"security_context": pod.Spec.SecurityContext,
+				},
+			}
+			events[i] = event
+		}
+
+		bt.client.PublishAll(events)
+		logp.Info("%v events sent", len(events))
 	}
 }
 

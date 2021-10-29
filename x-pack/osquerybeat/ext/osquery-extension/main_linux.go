@@ -18,4 +18,5 @@ func RegisterTables(server *osquery.ExtensionManagerServer) {
 	server.RegisterPlugin(table.NewPlugin("host_users", tables.HostUsersColumns(), tables.GetHostUsersGenerateFunc()))
 	server.RegisterPlugin(table.NewPlugin("host_groups", tables.HostGroupsColumns(), tables.GetHostGroupsGenerateFunc()))
 	server.RegisterPlugin(table.NewPlugin("host_processes", tables.HostProcessesColumns(), tables.GetHostProcessesGenerateFunc()))
+	server.RegisterPlugin(table.NewPlugin("kube_pods", tables.KubePodsColumns(), tables.GetKubePodsGenerateFunc()))
 }

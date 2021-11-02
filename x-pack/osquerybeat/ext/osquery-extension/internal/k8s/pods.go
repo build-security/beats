@@ -1,8 +1,9 @@
-package kube
+package k8s
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/osquery/osquery-go/plugin/table"
@@ -11,10 +12,12 @@ import (
 
 // Generate uses the api to retrieve information on all pods
 func Pods(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
-	client, err := GetKubeClient("/Users/daveyakushimiso/.kube/config")
+	err := Init()
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Error connecting to kubernetes API server: %s", err))
 	}
+
+	client := GetClient()
 
 	pods, err := client.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {

@@ -7,7 +7,7 @@ package tables
 import (
 	"github.com/osquery/osquery-go/plugin/table"
 
-	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/internal/kube"
+	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/internal/k8s"
 )
 
 func KubePodsColumns() []table.ColumnDefinition {
@@ -24,5 +24,5 @@ func KubePodsColumns() []table.ColumnDefinition {
 }
 
 func GetKubePodsGenerateFunc() table.GenerateFunc {
-	return kube.Pods
+	return k8s.Pods
 }

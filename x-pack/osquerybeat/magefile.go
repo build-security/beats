@@ -55,9 +55,26 @@ func Build() error {
 		return err
 	}
 
-	// Rename osquery-extension to osquery-extension.ext on non windows platforms
+	params.WorkDir = "./ext/kubequery"
+	params.InputFiles = []string{"./cmd/kubequery"}
+	params.OutputDir = "bin"
+	params.Name = "kubequery"
+	params.CGO = false
+	err = devtools.Build(params)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename("./ext/kubequery/bin/kubequery", "kubequery")
+
+	// Append .ext to extensions on non windows platforms.
 	if runtime.GOOS != "windows" {
 		err = os.Rename("osquery-extension", "osquery-extension.ext")
+		if err != nil {
+			return err
+		}
+
+		err = os.Rename("kubequery", "kubequery.ext")
 		if err != nil {
 			return err
 		}

@@ -14,5 +14,8 @@
 /osquery-extension.ext
 /osquery-extension.exe
 
+/kubequery.ext
+/kubequery.exe
+
 # VSCode
 .vscode/

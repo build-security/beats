@@ -140,7 +140,7 @@ func (q *OSQueryD) Check(ctx context.Context) error {
 
 	err = cmd.Wait()
 
-	return nil
+	return err
 }
 
 // Run executes osqueryd binary as a child process
@@ -252,19 +252,21 @@ func (q *OSQueryD) prepare(ctx context.Context) (func(), error) {
 		return cleanupFn, nil
 	}
 
-	// Prepare autoload osquery-extension
-	extensionPath := osqueryExtensionPath(q.binPath)
-	if _, err := os.Stat(extensionPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "extension path does not exist: %s", extensionPath)
-		} else {
-			return nil, errors.Wrapf(err, "failed to stat extension path")
+	// Prepare autoload osquery-extension.
+	extensionPaths := extensionPaths(q.binPath)
+	for _, path := range extensionPaths {
+		if _, err := os.Stat(path); err != nil {
+			if os.IsNotExist(err) {
+				return nil, errors.Wrapf(err, "extension path does not exist: %s", path)
+			} else {
+				return nil, errors.Wrapf(err, "failed to stat extension path")
+			}
 		}
 	}
 
-	// Write the autoload file
+	// Write the autoload file.
 	extensionAutoloadPath := q.resolveDataPath(osqueryAutoload)
-	err = prepareAutoloadFile(extensionAutoloadPath, extensionPath, q.log)
+	err = prepareAutoloadFile(extensionAutoloadPath, extensionPaths, q.log)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to prepare extensions autoload file")
 	}
@@ -288,7 +290,7 @@ func (q *OSQueryD) prepare(ctx context.Context) (func(), error) {
 	return func() {}, nil
 }
 
-func prepareAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath string, log *logp.Logger) error {
+func prepareAutoloadFile(extensionAutoloadPath string, mandatoryExtensionPaths []string, log *logp.Logger) error {
 	ok, err := fileutil.FileExists(extensionAutoloadPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check osquery.autoload file exists")
@@ -297,8 +299,8 @@ func prepareAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath string, l
 	rewrite := false
 
 	if ok {
-		log.Debugf("Extensions autoload file %s exists, verify the first extension is ours", extensionAutoloadPath)
-		err = verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath)
+		log.Debugf("Extensions autoload file %s exists, verify the mandatory extensions on top of file", extensionAutoloadPath)
+		err = verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPaths)
 		if err != nil {
 			log.Debugf("Extensions autoload file %v verification failed, err: %v, create a new one", extensionAutoloadPath, err)
 			rewrite = true
@@ -309,26 +311,29 @@ func prepareAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath string, l
 	}
 
 	if rewrite {
-		if err := ioutil.WriteFile(extensionAutoloadPath, []byte(mandatoryExtensionPath), 0644); err != nil {
+		if err := ioutil.WriteFile(extensionAutoloadPath, []byte(strings.Join(mandatoryExtensionPaths, "\n")), 0644); err != nil {
 			return errors.Wrap(err, "failed write osquery extension autoload file")
 		}
 	}
 	return nil
 }
 
-func verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath string) error {
+func verifyAutoloadFile(extensionAutoloadPath string, mandatoryExtensionPaths []string) error {
 	f, err := os.Open(extensionAutoloadPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
+
 	scanner := bufio.NewScanner(f)
-	for i := 0; scanner.Scan(); i++ {
+	i := 0
+
+	for ; scanner.Scan(); i++ {
 		line := scanner.Text()
-		if i == 0 {
-			// Check that the first line is the mandatory extension
-			if line != mandatoryExtensionPath {
-				return errors.New("extentsions autoload file is missing mandatory extension in the first line of the file")
+		if i < len(mandatoryExtensionPaths) {
+			// Check that nth line of the file is the nth mandatory extension.
+			if line != mandatoryExtensionPaths[i] {
+				return errors.Errorf("extensions autoload file is missing mandatory extension %s on line %d", mandatoryExtensionPaths[i], i)
 			}
 		}
 
@@ -337,6 +342,10 @@ func verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath string) er
 		if err != nil {
 			return err
 		}
+	}
+
+	if i < len(mandatoryExtensionPaths) {
+		return errors.Errorf("expected %d mandatory extensions, but found only %d", len(mandatoryExtensionPaths), i)
 	}
 
 	return scanner.Err()
@@ -416,8 +425,13 @@ func osquerydPath(dir string) string {
 	return filepath.Join(dir, osquerydFilename())
 }
 
-func osqueryExtensionPath(dir string) string {
-	return filepath.Join(dir, extensionName)
+func extensionPaths(dir string) []string {
+	p := make([]string, 0, len(extensionNames))
+	for i := range p {
+		p[i] = filepath.Join(dir, extensionNames[i])
+	}
+
+	return p
 }
 
 func (q *OSQueryD) resolveDataPath(filename string) string {
@@ -427,7 +441,7 @@ func (q *OSQueryD) resolveDataPath(filename string) string {
 func (q *OSQueryD) logOSQueryOutput(ctx context.Context, r io.ReadCloser) error {
 	log := q.log.With("ctx", "osqueryd output")
 
-	buf := make([]byte, 2048, 2048)
+	buf := make([]byte, 2048)
 LOOP:
 	for {
 		n, err := r.Read(buf[:])

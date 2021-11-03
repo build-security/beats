@@ -34,6 +34,7 @@ import (
 // "go build" is invoked.
 type BuildArgs struct {
 	Name        string // Name of binary. (On Windows '.exe' is appended.)
+	WorkDir     string // Switch to this working directory. Input/output paths will be relative.
 	InputFiles  []string
 	OutputDir   string
 	CGO         bool
@@ -182,8 +183,40 @@ func Build(params BuildArgs) error {
 		defer os.Remove(syso)
 	}
 
+	var err error
+
+	if params.WorkDir != "" {
+		log.Println("Switching working directory:", params.WorkDir)
+
+		var wd string
+		wd, err = os.Getwd()
+		if err != nil {
+			return errors.Errorf("could not fetch current working directory: %w", err)
+		}
+
+		// Cleanup: must switch back to earlier working directory.
+		defer func() {
+			cerr := os.Chdir(wd)
+			if cerr != nil {
+				cerr = errors.Errorf("could not reset current working directory: %w", cerr)
+				if err == nil {
+					err = cerr
+				} else {
+					// Chain error with cleanup error.
+					err = errors.Errorf("%w, %w", err, cerr)
+				}
+			}
+		}()
+		err = os.Chdir(params.WorkDir)
+	}
+
 	log.Println("Adding build environment vars:", env)
-	return sh.RunWith(env, "go", args...)
+	err = sh.RunWith(env, "go", args...)
+	if err != nil {
+		err = errors.Errorf("failed to run build command: %w", err)
+	}
+
+	return err
 }
 
 // MakeWindowsSysoFile generates a .syso file containing metadata about the

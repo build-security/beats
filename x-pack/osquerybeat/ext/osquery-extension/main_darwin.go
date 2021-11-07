@@ -8,14 +8,15 @@
 package main
 
 import (
+	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/internal/tables"
 	"github.com/osquery/osquery-go"
 	"github.com/osquery/osquery-go/plugin/table"
-
-	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/internal/tables"
 )
 
 func RegisterTables(server *osquery.ExtensionManagerServer) {
 	server.RegisterPlugin(table.NewPlugin("host_users", tables.HostUsersColumns(), tables.GetHostUsersGenerateFunc()))
 	server.RegisterPlugin(table.NewPlugin("host_groups", tables.HostGroupsColumns(), tables.GetHostGroupsGenerateFunc()))
-	server.RegisterPlugin(table.NewPlugin("kube_pods", tables.KubePodsColumns(), tables.GetKubePodsGenerateFunc()))
+	server.RegisterPlugin(table.NewPlugin("host_processes", tables.HostProcessesColumns(), tables.GetHostProcessesGenerateFunc()))
+	server.RegisterPlugin(table.NewPlugin("k8s_pods", tables.KubePodsColumns(), tables.GetKubePodsGenerateFunc()))
+	server.RegisterPlugin(table.NewPlugin("k8s_leases", tables.K8sLeaseColumns(), tables.GetK8sLeasesGenerateFunc()))
 }

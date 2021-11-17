@@ -85,6 +85,55 @@ The app will wait for the debugger to connect before starting
     API server listening at: [::]:40000
 Use your favorite IDE to connect to the debugger on `localhost:40000` (for example [Goland](https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-3-create-the-remote-run-debug-configuration-on-the-client-computer))
 
+
+### Build with the agent (Hacky way)
+This method's target is to make the agent think kubebeat is osquerybeat and then run it upon the osquery integration activation through the kibana fleet manager.
+The next immediate step would be to create a local setup with our own integration, this way we wouldn't have to fool the agent to think our kubebeat is osquerybeat.
+
+How it's done:
+1. Copy the kubebeat release tar.gz and it's sha (changing the name in the sha file) to the downloads directory of the agent.
+2. Create a key and sign the tar.gz with the key.
+3. Configure the agent to use the generated key to validate the tar.gz.
+
+currently, step 3 doesn't work (Only tried with a fleet-managed agent) and results with:
+
+    2021-11-17T10:55:22.454Z	ERROR	log/reporter.go:36	2021-11-17T10:55:22Z - message: Application: osquerybeat--8.0.0-SNAPSHOT[41f91bfa-7915-4388-be70-71cc51cf97b2]: State changed to FAILED: operation 'operation-verify' failed to verify osquerybeat.8.0.0-SNAPSHOT: 3 errors occurred:
+    * check detached signature: openpgp: signature made by unknown entity
+    * check detached signature: openpgp: invalid signature: hash tag doesn't match
+    * fetching asc file from https://artifacts.elastic.co/downloads/beats/osquerybeat/osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz.asc: call to 'https://artifacts.elastic.co/downloads/beats/osquerybeat/osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz.asc' returned unsuccessful status code: 404
+
+    - type: 'ERROR' - sub_type: 'FAILED'
+
+#### Detailed walkthrough:
+
+Build binary:
+
+    PLATFORMS=linux/amd64 TYPES=tgz SNAPSHOT=true make release
+
+Change the beat name in the file 'kubebeat/build/distributions/kubebeat-8.1.0-SNAPSHOT-linux-x86_64.tar.gz.sha512':
+
+
+original
+
+    abcdSOMESHA  kubebeat-8.1.0-SNAPSHOT-linux-x86_64.tar.gz
+
+new
+
+    abcdSOMESHA  osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz
+
+
+Build docker image:
+
+    docker build -f agent_tools/Dockerfile.agent -t kubebeatagent .
+
+Deploy the agent to the cluster (fleet-managed):
+
+    kubectl apply -f agent_tools/my-elastic-agent-kubebeat-managed-kubernetes.yaml
+
+Configure the agent to send events to the local running elasticsearch host
+
+![agent_tools/fleet_settings.png](agent_tools/fleet_settings.png)
+
 # {Beat}
 
 Welcome to {Beat}.

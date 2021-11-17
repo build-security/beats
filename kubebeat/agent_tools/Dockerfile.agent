@@ -1,0 +1,12 @@
+FROM docker.elastic.co/beats/elastic-agent:8.0.0-SNAPSHOT
+COPY ./build/distributions/kubebeat-8.1.0-SNAPSHOT-linux-x86_64.tar.gz /usr/share/elastic-agent/state/data/downloads/osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz
+COPY ./build/distributions/kubebeat-8.1.0-SNAPSHOT-linux-x86_64.tar.gz.sha512 /usr/share/elastic-agent/state/data/downloads/osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz.sha512
+COPY ./agent_tools/key_gen /usr/share/elastic-agent/key_gen
+COPY ./agent_tools/startup.sh /usr/share/elastic-agent/startup.sh
+USER root
+RUN sed -i '$ i\/usr/share/elastic-agent/startup.sh' /usr/local/bin/docker-entrypoint
+# RUN sed -i '$ i\gpg --batch --gen-key /usr/share/elastic-agent/key_gen' /usr/local/bin/docker-entrypoint
+# RUN gpg --batch --gen-key key_gen
+# RUN gpg --no-tty --passphrase abc -b -a /usr/share/elastic-agent/state/data/downloads/osquerybeat-8.0.0-SNAPSHOT-linux-x86_64.tar.gz
+# RUN printf 'agent.download:\n   pgpfile: "/root/.gnupg/pubring.gpg"\n' >> /usr/share/elastic-agent/state/elastic-agent.yml
+

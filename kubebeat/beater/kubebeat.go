@@ -6,7 +6,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/mitchellh/mapstructure"
+	"io/fs"
+	"log"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
@@ -87,19 +91,43 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		return err
 	}
 
-	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()
-
+	//config := &mapstructure.DecoderConfig{
+	//	TagName: "json",
+	//}
 	for {
 		select {
 		case <-bt.done:
 			return nil
 		case o := <-output:
 			runId, _ := uuid.NewV4()
-			omap := o.(map[string][]interface{})
+			events := make([]beat.Event, 0)
+			timestamp := time.Now()
 
-			func1 := func(r interface{}) {
-				bt.resourceIteration(runId, r)
+			result, err := bt.Decision(o)
+			if err != nil {
+				logp.Error(err)
+			} else {
+				var opaResult = result.(map[string]interface{})
+
+				if findings, ok := opaResult["findings"].([]interface{}); ok {
+					for _, findingRaw := range findings {
+						if finding, ok := findingRaw.(map[string]interface{}); ok {
+							event := beat.Event{
+								Timestamp: timestamp,
+								Fields: common.MapStr{
+									"run_id":   runId,
+									"result":   finding["result"],
+									"resource": opaResult["resource"],
+									"rule":     finding["rule"],
+								},
+							}
+							events = append(events, event)
+
+						}
+					}
+				}
+
 			}
 
 			bt.scheduler.RunResource(omap, func1)
@@ -110,42 +138,26 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 }
 
-func (bt *kubebeat) resourceIteration(runId uuid.UUID, resource interface{}) {
-	// logp.Info("resourceIteration trace runId: %v resource: %+v", runId, resource)
-
-	events := make([]beat.Event, 0)
-	timestamp := time.Now()
-
-	result, err := bt.eval.Decision(resource)
-	if err != nil {
-		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return
-	}
-
-	var decoded PolicyResult
-	err = mapstructure.Decode(result, &decoded)
-	if err != nil {
-		logp.Error(fmt.Errorf("error parsing the policy result: %w", err))
-		return
-	}
-
-	for _, ruleResult := range decoded {
-		for _, Finding := range ruleResult.Findings {
-			event := beat.Event{
-				Timestamp: timestamp,
-				Fields: common.MapStr{
-					"run_id":   runId,
-					"result":   Finding.Result,
-					"resource": ruleResult.Resource,
-					"rule":     Finding.Rule,
-				},
-			}
-			events = append(events, event)
+func (bt *kubebeat) Decision(input interface{}) (interface{}, error) {
+	// get the named policy decision for the specified input
+	allFile, canParse := input.(map[string]interface{})
+	if canParse == true {
+		if _, ok := allFile["file_system"]; !ok {
+			return nil, nil
 		}
-	}
+		opaInputArray := allFile["file_system"].([]interface{})
 
-	bt.client.PublishAll(events)
-	logp.Info("%v events sent", len(events))
+		result, err := bt.opa.Decision(context.Background(), sdk.DecisionOptions{
+			Path:  "main",
+			Input: opaInputArray[0].(FileSystemResourceData),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return result.Result, nil
+	}
+	return nil, nil
 }
 
 // Stop stops kubebeat.

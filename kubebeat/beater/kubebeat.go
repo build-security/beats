@@ -98,10 +98,11 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		case <-bt.done:
 			return nil
 		case o := <-output:
+			runId, _ := uuid.NewV4()
 			omap := o.(map[string][]interface{})
 			for _, resources := range omap {
 				for _, r := range resources {
-					bt.resourceIteration(r)
+					bt.resourceIteration(r,runId)
 				}
 			}
 		}
@@ -111,8 +112,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 }
 
-func (bt *kubebeat) resourceIteration(resource interface{}) {
-	runId, _ := uuid.NewV4()
+func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID) {
 	timestamp := time.Now()
 
 	result, err := bt.eval.Decision(resource)

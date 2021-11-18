@@ -5,27 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"io/fs"
-	"log"
-	"os"
-	"strings"
-	"time"
-
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
+	"github.com/gofrs/uuid"
 )
 
 // kubebeat configuration.
 type kubebeat struct {
-	done      chan struct{}
-	config    config.Config
-	client    beat.Client
-	eval      *evaluator
-	data      *Data
-	scheduler ResourceScheduler
+	done           chan struct{}
+	config         config.Config
+	client         beat.Client
+	eval           *evaluator
+	data           *Data
+	opaEventParser *opaEventParser
 }
 
 // New creates an instance of kubebeat.
@@ -46,6 +40,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
+	eventParser, err := NewOpaEventParser()
+	if err != nil {
+		return nil, err
+	}
+
 	kubef, err := NewKubeFetcher(c.KubeConfig, c.Period)
 	if err != nil {
 		return nil, err
@@ -56,11 +55,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	data.RegisterFetcher("file_system", NewFileFetcher(c.Files))
 
 	bt := &kubebeat{
-		done:      make(chan struct{}),
-		config:    c,
-		eval:      evaluator,
-		data:      data,
-		scheduler: scheduler,
+		done:           make(chan struct{}),
+		config:         c,
+		eval:           evaluator,
+		data:           data,
+		opaEventParser: eventParser,
 	}
 	return bt, nil
 }
@@ -91,46 +90,20 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		return err
 	}
 
+	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()
-	//config := &mapstructure.DecoderConfig{
-	//	TagName: "json",
-	//}
+
 	for {
 		select {
 		case <-bt.done:
 			return nil
 		case o := <-output:
-			runId, _ := uuid.NewV4()
-			events := make([]beat.Event, 0)
-			timestamp := time.Now()
-
-			result, err := bt.Decision(o)
-			if err != nil {
-				logp.Error(err)
-			} else {
-				var opaResult = result.(map[string]interface{})
-
-				if findings, ok := opaResult["findings"].([]interface{}); ok {
-					for _, findingRaw := range findings {
-						if finding, ok := findingRaw.(map[string]interface{}); ok {
-							event := beat.Event{
-								Timestamp: timestamp,
-								Fields: common.MapStr{
-									"run_id":   runId,
-									"result":   finding["result"],
-									"resource": opaResult["resource"],
-									"rule":     finding["rule"],
-								},
-							}
-							events = append(events, event)
-
-						}
-					}
+			omap := o.(map[string][]interface{})
+			for _, resources := range omap {
+				for _, r := range resources {
+					bt.resourceIteration(r)
 				}
-
 			}
-
-			bt.scheduler.RunResource(omap, func1)
 		}
 
 		bt.client.PublishAll(events)
@@ -138,26 +111,24 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 }
 
-func (bt *kubebeat) Decision(input interface{}) (interface{}, error) {
-	// get the named policy decision for the specified input
-	allFile, canParse := input.(map[string]interface{})
-	if canParse == true {
-		if _, ok := allFile["file_system"]; !ok {
-			return nil, nil
-		}
-		opaInputArray := allFile["file_system"].([]interface{})
+func (bt *kubebeat) resourceIteration(resource interface{}) {
+	runId, _ := uuid.NewV4()
+	timestamp := time.Now()
 
-		result, err := bt.opa.Decision(context.Background(), sdk.DecisionOptions{
-			Path:  "main",
-			Input: opaInputArray[0].(FileSystemResourceData),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		return result.Result, nil
+	result, err := bt.eval.Decision(resource)
+	if err != nil {
+		logp.Error(fmt.Errorf("error running the policy: %w", err))
+		return
 	}
-	return nil, nil
+
+	events, err := bt.opaEventParser.ParseResult(result, runId, timestamp)
+
+	if err != nil {
+		logp.Error(fmt.Errorf("error running the policy: %w", err))
+		return
+	}
+
+	bt.client.PublishAll(events)
 }
 
 // Stop stops kubebeat.

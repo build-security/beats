@@ -3,11 +3,14 @@ package beater
 import (
 	"context"
 	"fmt"
+	"github.com/elastic/beats/v7/libbeat/management"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
+	"github.com/elastic/beats/v7/libbeat/cfgfile"
 	"github.com/elastic/beats/v7/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/common/reload"
 	"github.com/elastic/beats/v7/libbeat/logp"
 	"github.com/gofrs/uuid"
 )
@@ -21,6 +24,28 @@ type kubebeat struct {
 	data           *Data
 	opaEventParser *opaEventParser
 	scheduler      ResourceScheduler
+}
+
+type kubebeatFactory struct {
+}
+
+func (k kubebeatFactory) Create(p beat.PipelineConnector, config *common.Config) (cfgfile.Runner, error) {
+	var b *beat.Beat
+	b.Publisher = p
+	beat, err := New(b, config)
+	if err != nil {
+		return nil, err
+	}
+	runner, ok := beat.(cfgfile.Runner)
+	if ok != true {
+		return nil, fmt.Errorf("error creating kubebeat")
+	}
+	return runner, err
+}
+
+func (k kubebeatFactory) CheckConfig(config *common.Config) error {
+	// TODO
+	return nil
 }
 
 // New creates an instance of kubebeat.
@@ -78,8 +103,16 @@ type Finding struct {
 	Rule   interface{} `json:"rule"`
 }
 
-// Run starts kubebeat.
 func (bt *kubebeat) Run(b *beat.Beat) error {
+	if b.Manager.Enabled() {
+		runner := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
+		reload.Register.MustRegisterList("inputs", runner)
+	}
+	return bt.run(b)
+}
+
+// Run starts kubebeat.
+func (bt *kubebeat) run(b *beat.Beat) error {
 	logp.Info("kubebeat is running! Hit CTRL-C to stop it.")
 
 	err := bt.data.Run()
@@ -91,6 +124,8 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	if bt.client, err = b.Publisher.Connect(); err != nil {
 		return err
 	}
+
+	//b.Manager.UpdateStatus(management.Running, "kubebeat is running")
 
 	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()

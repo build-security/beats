@@ -20,6 +20,7 @@ type kubebeat struct {
 	eval           *evaluator
 	data           *Data
 	opaEventParser *opaEventParser
+	scheduler      ResourceScheduler
 }
 
 // New creates an instance of kubebeat.
@@ -60,6 +61,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		eval:           evaluator,
 		data:           data,
 		opaEventParser: eventParser,
+		scheduler:      scheduler,
 	}
 	return bt, nil
 }
@@ -100,11 +102,12 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		case o := <-output:
 			runId, _ := uuid.NewV4()
 			omap := o.(map[string][]interface{})
-			for _, resources := range omap {
-				for _, r := range resources {
-					bt.resourceIteration(r,runId)
-				}
+
+			resourceCallback := func(resource interface{}) {
+				bt.resourceIteration(resource, runId)
 			}
+
+			bt.scheduler.RunResource(omap, resourceCallback)
 		}
 
 		bt.client.PublishAll(events)

@@ -104,12 +104,10 @@ type Finding struct {
 }
 
 func (bt *kubebeat) Run(b *beat.Beat) error {
-	//if b.Manager.Enabled() {
-	//	runner := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
-	//	reload.Register.MustRegisterList("inputs", runner)
-	//}
-	runner := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
-	reload.Register.MustRegisterList("inputs", runner)
+	if b.Manager.Enabled() {
+		runnerList := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
+		reload.Register.MustRegisterList("inputs", runnerList)
+	}
 	return bt.run(b)
 }
 
@@ -126,8 +124,6 @@ func (bt *kubebeat) run(b *beat.Beat) error {
 	if bt.client, err = b.Publisher.Connect(); err != nil {
 		return err
 	}
-
-	//b.Manager.UpdateStatus(management.Running, "kubebeat is running")
 
 	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()

@@ -27,11 +27,11 @@ The interesting files are:
 
 First initialize the git submodule:
 
+4. Clone the git submodule of the CIS rules:
+```
     $ git submodule update --init
-
-Second compile the application for Linux:
-
-    $ GOOS=linux go build
+```
+5. Comment the Rego code that uses data.yaml (Temporary fix) - go to compliance/cis_k8s/cis_k8s.rego and comment the following line of code:
 
     ```
     data.activated_rules.cis_k8s[rule_id]

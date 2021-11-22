@@ -5,10 +5,23 @@ import (
 
 	cmd "github.com/elastic/beats/v7/libbeat/cmd"
 	"github.com/elastic/beats/v7/libbeat/cmd/instance"
+	"github.com/elastic/beats/v7/libbeat/publisher/processing"
+
+	_ "github.com/elastic/beats/v7/x-pack/libbeat/include"
 )
 
 // Name of this beat
 var Name = "kubebeat"
 
-// RootCmd to handle beats cli
-var RootCmd = cmd.GenRootCmdWithSettings(beater.New, instance.Settings{Name: Name})
+var RootCmd = Kubebeat()
+
+func Kubebeat() *cmd.BeatsRootCmd {
+	settings := instance.Settings{
+		Name:            Name,
+		Processing:      processing.MakeDefaultBeatSupport(true),
+		ElasticLicensed: true,
+	}
+	command := cmd.GenRootCmdWithSettings(beater.New, settings)
+
+	return command
+}

@@ -144,9 +144,6 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
-        - name: proc
-          hostPath:
-            path: /proc
         - name: etckubernetes
           hostPath:
             path: /etc/kubernetes

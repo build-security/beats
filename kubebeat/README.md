@@ -11,11 +11,25 @@ The interesting files are:
 
 
 ## Table of contents
-- [Prerequisites](#prerequisites)
-- [Running the Kubebeat](#running-the-kubebeat)
-- [Clean up](#clean-up)
-- [Remote Debugging](#remote-debugging)
-- [Open questions](#open-questions)
+- [POC Documentation](#poc-documentation)
+  - [Table of contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Running the Kubebeat](#running-the-kubebeat)
+    - [Clean up](#clean-up)
+    - [Remote Debugging](#remote-debugging)
+    - [Open questions](#open-questions)
+- [{Beat}](#beat)
+  - [Getting Started with {Beat}](#getting-started-with-beat)
+    - [Requirements](#requirements)
+    - [Init Project](#init-project)
+    - [Build](#build)
+    - [Run](#run)
+    - [Test](#test)
+    - [Update](#update)
+    - [Cleanup](#cleanup)
+    - [Clone](#clone)
+  - [Packaging](#packaging)
+  - [Build Elastic-Agent Docker with pre-packaged kubebeat](#build-elastic-agent-docker-with-pre-packaged-kubebeat)
 
 
 ## Prerequisites
@@ -229,8 +243,7 @@ make release
 
 This will fetch and create all images required for the build process. The whole process to finish can take several minutes.
 
-
-## Package kubebeat inside elastic agent docker
+## Build Elastic-Agent Docker with pre-packaged kubebeat
 
 
 **1.Build Elastic-Agent Docker**

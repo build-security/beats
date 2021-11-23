@@ -1,197 +1,87 @@
 package beater
 
 import (
-	"context"
-	"fmt"
-	"github.com/elastic/beats/v7/libbeat/management"
-	"time"
-
-	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/elastic/beats/v7/libbeat/cfgfile"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/common/reload"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	"github.com/gofrs/uuid"
+	"github.com/elastic/beats/v7/libbeat/management"
 )
 
 // kubebeat configuration.
 type kubebeat struct {
-	done           chan struct{}
-	config         config.Config
-	client         beat.Client
-	eval           *evaluator
-	data           *Data
-	opaEventParser *opaEventParser
-	scheduler      ResourceScheduler
-	beat           *beat.Beat
-}
+	config  *common.Config
+	factory *factory
+	done    chan struct{}
 
-type kubebeatFactory struct {
-}
-
-func (k kubebeatFactory) Create(p beat.PipelineConnector, config *common.Config) (cfgfile.Runner, error) {
-	logp.Info("XXX CREATE")
-	b := &beat.Beat{}
-	b.Publisher = p
-	beat, err := New(b, config)
-	if err != nil {
-		logp.Info(fmt.Sprintf("XXX CREATE 1 ERR %s", err))
-		return nil, err
-	}
-	logp.Info("XXX CREATE 2")
-	runner, ok := beat.(cfgfile.Runner)
-	if ok != true {
-		logp.Info("XXX CREATE 3 ERR casting")
-		return nil, fmt.Errorf("error creating kubebeat")
-	}
-	logp.Info("XXX CREATE 4")
-	return runner, err
-}
-
-func (k kubebeatFactory) CheckConfig(config *common.Config) error {
-	logp.Info("XXX Check config")
-	// TODO
-	return nil
-}
-
-func (bt *kubebeat) String() string {
-	return "kubebeat"
-}
-
-func (bt *kubebeat) Start() {
-	bt.Run(bt.beat)
 }
 
 // New creates an instance of kubebeat.
 func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
-	logp.Info("XXX New")
-	ctx := context.Background()
-
-	c := config.DefaultConfig
-	if err := cfg.Unpack(&c); err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
-	}
-
-	logp.Info("Config initiated.")
-
-	data := NewData(ctx, c.Period)
-	scheduler := NewSynchronousScheduler()
-	evaluator, err := NewEvaluator()
-	if err != nil {
+	factory := newFactory(b, make(chan error))
+	if err := factory.CheckConfig(cfg); err != nil {
 		return nil, err
 	}
 
-	eventParser, err := NewOpaEventParser()
-	if err != nil {
-		return nil, err
-	}
-
-	kubef, err := NewKubeFetcher(c.KubeConfig, c.Period)
-	if err != nil {
-		return nil, err
-	}
-
-	data.RegisterFetcher("kube_api", kubef)
-	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir))
-	data.RegisterFetcher("file_system", NewFileFetcher(c.Files))
-
-	bt := &kubebeat{
-		done:           make(chan struct{}),
-		config:         c,
-		eval:           evaluator,
-		data:           data,
-		opaEventParser: eventParser,
-		scheduler:      scheduler,
-		beat:           b,
-	}
-	return bt, nil
+	return &kubebeat{
+		config:  cfg,
+		factory: factory,
+		done:    make(chan struct{}),
+	}, nil
 }
 
-type PolicyResult map[string]RuleResult
-
-type RuleResult struct {
-	Findings []Finding   `json:"findings"`
-	Resource interface{} `json:"resource"`
-}
-
-type Finding struct {
-	Result interface{} `json:"result"`
-	Rule   interface{} `json:"rule"`
-}
 
 func (bt *kubebeat) Run(b *beat.Beat) error {
-	logp.Info("XXX Run")
-	if b.Manager.Enabled() {
-		logp.Info("XXX Runs managed ")
-		runnerList := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
-		reload.Register.MustRegisterList("inputs", runnerList)
-	} else {
-		return bt.run(b)
+	if !b.Manager.Enabled() {
+		return bt.runStatic(b, bt.factory)
+	}
+	return bt.runManaged(b, bt.factory)
+}
+
+func (bt *kubebeat) runStatic(b *beat.Beat, factory *factory) error {
+	runner, err := factory.Create(b.Publisher, bt.config)
+	if err != nil {
+		return err
+	}
+	runner.Start()
+	defer runner.Stop()
+
+	logp.Debug("main", "Waiting for the runner to finish")
+
+	select {
+	case <-bt.done:
+	case err := <-factory.err:
+		close(bt.done)
+		return err
 	}
 	return nil
 }
 
-// Run starts kubebeat.
-func (bt *kubebeat) run(b *beat.Beat) error {
-	logp.Info("kubebeat is running! Hit CTRL-C to stop it.")
+func (bt *kubebeat) runManaged(b *beat.Beat, factory *factory) error {
+	runner := cfgfile.NewRunnerList(management.DebugK, factory, b.Publisher)
+	reload.Register.MustRegisterList("inputs", runner)
+	defer runner.Stop()
 
-	err := bt.data.Run()
-	if err != nil {
-		return err
-	}
-	defer bt.data.Stop()
-
-	if bt.client, err = b.Publisher.Connect(); err != nil {
-		return err
-	}
-
-	// ticker := time.NewTicker(bt.config.Period)
-	output := bt.data.Output()
+	logp.Debug("main", "Waiting for the runner to finish")
 
 	for {
 		select {
 		case <-bt.done:
 			return nil
-		case o := <-output:
-			runId, _ := uuid.NewV4()
-			omap := o.(map[string][]interface{})
-
-			resourceCallback := func(resource interface{}) {
-				bt.resourceIteration(resource, runId)
+		case err := <-factory.err:
+			// when we're managed we don't want
+			// to stop if the sniffer(s) exited without an error
+			// this would happen during a configuration reload
+			if err != nil {
+				close(bt.done)
+				return err
 			}
-
-			bt.scheduler.ScheduleResources(omap, resourceCallback)
 		}
 	}
 }
 
-func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID) {
-	timestamp := time.Now()
-
-	result, err := bt.eval.Decision(resource)
-	if err != nil {
-		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return
-	}
-
-	events, err := bt.opaEventParser.ParseResult(result, runId, timestamp)
-
-	if err != nil {
-		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return
-	}
-
-	bt.client.PublishAll(events)
-}
-
-// Stop stops kubebeat.
 func (bt *kubebeat) Stop() {
-	logp.Info("XXX Stop")
-	bt.client.Close()
-	bt.eval.Stop()
-
+	logp.Info("Kubebeat send stop signal")
 	close(bt.done)
 }
-
-// Todo Add registeraction handlers see x-pack/osquerybeat/beater/osquerybeat.go for example

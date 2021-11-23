@@ -40,7 +40,7 @@ func (k factory) Create(p beat.PipelineConnector, cfg *common.Config) (cfgfile.R
 		return nil, err
 	}
 
-	eventParser, err := NewOpaEventParser()
+	eventParser, err := NewEvaluationResultParser()
 	if err != nil {
 		return nil, err
 	}
@@ -58,15 +58,15 @@ func (k factory) Create(p beat.PipelineConnector, cfg *common.Config) (cfgfile.R
 		return nil, err
 	}
 	r := &runner{
-		done:           make(chan struct{}),
-		config:         c,
-		eval:           evaluator,
-		data:           data,
-		opaEventParser: eventParser,
-		scheduler:      scheduler,
-		pipe:           p,
-		err:            k.err,
-		client:         client,
+		done:         make(chan struct{}),
+		config:       c,
+		eval:         evaluator,
+		data:         data,
+		resultParser: eventParser,
+		scheduler:    scheduler,
+		pipe:         p,
+		err:          k.err,
+		client:       client,
 	}
 	return r, nil
 }

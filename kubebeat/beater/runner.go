@@ -14,23 +14,11 @@ type runner struct {
 	config         config.Config
 	client         beat.Client
 	eval           *evaluator
-	data           *Data
-	opaEventParser *opaEventParser
-	scheduler      ResourceScheduler
+	data         *Data
+	resultParser *evaluationResultParser
+	scheduler    ResourceScheduler
 	pipe           beat.PipelineConnector
 	err            chan error
-}
-
-type PolicyResult map[string]RuleResult
-
-type RuleResult struct {
-	Findings []Finding   `json:"findings"`
-	Resource interface{} `json:"resource"`
-}
-
-type Finding struct {
-	Result interface{} `json:"result"`
-	Rule   interface{} `json:"rule"`
 }
 
 func (r *runner) String() string {
@@ -60,11 +48,12 @@ func (r *runner) Start() {
 		case <-r.done:
 			return
 		case o := <-output:
+			timestamp := time.Now()
 			runId, _ := uuid.NewV4()
 			omap := o.(map[string][]interface{})
 
 			resourceCallback := func(resource interface{}) {
-				r.resourceIteration(resource, runId)
+				r.resourceIteration(resource, runId, timestamp)
 			}
 
 			r.scheduler.ScheduleResources(omap, resourceCallback)
@@ -72,8 +61,7 @@ func (r *runner) Start() {
 	}
 }
 
-func (r *runner) resourceIteration(resource interface{}, runId uuid.UUID) {
-	timestamp := time.Now()
+func (r *runner) resourceIteration(resource interface{}, runId uuid.UUID, timestamp time.Time) {
 
 	result, err := r.eval.Decision(resource)
 	if err != nil {
@@ -81,7 +69,7 @@ func (r *runner) resourceIteration(resource interface{}, runId uuid.UUID) {
 		return
 	}
 
-	events, err := r.opaEventParser.ParseResult(result, runId, timestamp)
+	events, err := r.resultParser.ParseResult(result, runId, timestamp)
 
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

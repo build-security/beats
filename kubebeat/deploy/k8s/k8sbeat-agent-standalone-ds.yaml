@@ -117,9 +117,6 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
-            - name: proc
-              mountPath: /hostfs/proc
-              readOnly: true
             - name: etckubernetes
               mountPath: /hostfs/etc/kubernetes
               readOnly: true

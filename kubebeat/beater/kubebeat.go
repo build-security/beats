@@ -32,7 +32,7 @@ type kubebeatFactory struct {
 
 func (k kubebeatFactory) Create(p beat.PipelineConnector, config *common.Config) (cfgfile.Runner, error) {
 	logp.Info("XXX CREATE")
-	var b *beat.Beat
+	b := &beat.Beat{}
 	b.Publisher = p
 	beat, err := New(b, config)
 	if err != nil {
@@ -126,8 +126,10 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		logp.Info("XXX Runs managed ")
 		runnerList := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
 		reload.Register.MustRegisterList("inputs", runnerList)
+	} else {
+		return bt.run(b)
 	}
-	return bt.run(b)
+	return nil
 }
 
 // Run starts kubebeat.

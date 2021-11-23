@@ -24,32 +24,48 @@ type kubebeat struct {
 	data           *Data
 	opaEventParser *opaEventParser
 	scheduler      ResourceScheduler
+	beat           *beat.Beat
 }
 
 type kubebeatFactory struct {
 }
 
 func (k kubebeatFactory) Create(p beat.PipelineConnector, config *common.Config) (cfgfile.Runner, error) {
+	logp.Info("XXX CREATE")
 	var b *beat.Beat
 	b.Publisher = p
 	beat, err := New(b, config)
 	if err != nil {
+		logp.Info(fmt.Sprintf("XXX CREATE 1 ERR %s", err))
 		return nil, err
 	}
+	logp.Info("XXX CREATE 2")
 	runner, ok := beat.(cfgfile.Runner)
 	if ok != true {
+		logp.Info("XXX CREATE 3 ERR casting")
 		return nil, fmt.Errorf("error creating kubebeat")
 	}
+	logp.Info("XXX CREATE 4")
 	return runner, err
 }
 
 func (k kubebeatFactory) CheckConfig(config *common.Config) error {
+	logp.Info("XXX Check config")
 	// TODO
 	return nil
 }
 
+func (bt *kubebeat) String() string {
+	return "kubebeat"
+}
+
+func (bt *kubebeat) Start() {
+	bt.Run(bt.beat)
+}
+
 // New creates an instance of kubebeat.
 func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
+	logp.Info("XXX New")
 	ctx := context.Background()
 
 	c := config.DefaultConfig
@@ -87,6 +103,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		data:           data,
 		opaEventParser: eventParser,
 		scheduler:      scheduler,
+		beat:           b,
 	}
 	return bt, nil
 }
@@ -104,7 +121,9 @@ type Finding struct {
 }
 
 func (bt *kubebeat) Run(b *beat.Beat) error {
+	logp.Info("XXX Run")
 	if b.Manager.Enabled() {
+		logp.Info("XXX Runs managed ")
 		runnerList := cfgfile.NewRunnerList(management.DebugK, kubebeatFactory{}, b.Publisher)
 		reload.Register.MustRegisterList("inputs", runnerList)
 	}
@@ -166,6 +185,7 @@ func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID) {
 
 // Stop stops kubebeat.
 func (bt *kubebeat) Stop() {
+	logp.Info("XXX Stop")
 	bt.client.Close()
 	bt.eval.Stop()
 

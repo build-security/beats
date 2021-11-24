@@ -70,9 +70,6 @@ func (bt *kubebeat) runManaged(b *beat.Beat, factory *factory) error {
 		case <-bt.done:
 			return nil
 		case err := <-factory.err:
-			// when we're managed we don't want
-			// to stop if the sniffer(s) exited without an error
-			// this would happen during a configuration reload
 			if err != nil {
 				close(bt.done)
 				return err

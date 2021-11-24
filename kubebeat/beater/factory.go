@@ -8,7 +8,6 @@ import (
 	"github.com/elastic/beats/v7/libbeat/cfgfile"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	"github.com/elastic/beats/v7/libbeat/publisher/pipeline"
 )
 
 type factory struct {
@@ -24,7 +23,7 @@ func newFactory(b *beat.Beat, err chan error) *factory {
 }
 
 func (k factory) Create(p beat.PipelineConnector, cfg *common.Config) (cfgfile.Runner, error) {
-	ctx := context.Background()
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	c := config.DefaultConfig
 	if err := cfg.Unpack(&c); err != nil {
@@ -50,15 +49,17 @@ func (k factory) Create(p beat.PipelineConnector, cfg *common.Config) (cfgfile.R
 		return nil, err
 	}
 
+	// Register the fetchers to collect different types of data
 	data.RegisterFetcher("kube_api", kubef)
 	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir))
 	data.RegisterFetcher("file_system", NewFileFetcher(c.Files))
+	// Connect the publisher to later send events using the returned client
 	client, err := p.Connect()
 	if err != nil {
 		return nil, err
 	}
 	r := &runner{
-		done:         make(chan struct{}),
+		done:         ctx.Done(),
 		config:       c,
 		eval:         evaluator,
 		data:         data,
@@ -67,15 +68,12 @@ func (k factory) Create(p beat.PipelineConnector, cfg *common.Config) (cfgfile.R
 		pipe:         p,
 		err:          k.err,
 		client:       client,
+		cancelFunc:   cancelFunc,
 	}
 	return r, nil
 }
 
-func (p *factory) CheckConfig(config *common.Config) error {
-	runner, err := p.Create(pipeline.NewNilPipeline(), config)
-	if err != nil {
-		return err
-	}
-	runner.Stop()
-	return nil
+func (p *factory) CheckConfig(cfg *common.Config) error {
+	c := config.Config{}
+	return cfg.Unpack(&c)
 }

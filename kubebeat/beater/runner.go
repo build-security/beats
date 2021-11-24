@@ -1,6 +1,7 @@
 package beater
 
 import (
+	"context"
 	"fmt"
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
@@ -10,15 +11,16 @@ import (
 )
 
 type runner struct {
-	done           chan struct{}
-	config         config.Config
-	client         beat.Client
-	eval           *evaluator
+	done         <-chan struct{}
+	config       config.Config
+	client       beat.Client
+	eval         *evaluator
 	data         *Data
 	resultParser *evaluationResultParser
 	scheduler    ResourceScheduler
-	pipe           beat.PipelineConnector
-	err            chan error
+	pipe         beat.PipelineConnector
+	err          chan error
+	cancelFunc   context.CancelFunc
 }
 
 func (r *runner) String() string {
@@ -82,6 +84,6 @@ func (r *runner) resourceIteration(resource interface{}, runId uuid.UUID, timest
 func (r *runner) Stop() {
 	r.client.Close()
 	r.eval.Stop()
-	close(r.done)
+	r.cancelFunc()
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/elastic/beats/v7/libbeat/cmd/instance"
 	"github.com/elastic/beats/v7/libbeat/publisher/processing"
 
+	// Register the fleet management
 	_ "github.com/elastic/beats/v7/x-pack/libbeat/include"
 )
 

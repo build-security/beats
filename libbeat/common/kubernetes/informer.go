@@ -161,6 +161,20 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "job"
+
+	case *PodSecurityPolicy:
+		psp := client.PolicyV1beta1().PodSecurityPolicies()
+		listwatch = &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				return psp.List(ctx, options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				return psp.Watch(ctx, options)
+			},
+		}
+
+		objType = "podsecuritypolicy"
+
 	default:
 		return nil, "", fmt.Errorf("unsupported resource type for watching %T", resource)
 	}

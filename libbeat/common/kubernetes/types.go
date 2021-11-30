@@ -26,6 +26,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	// policyv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
+	"k8s.io/kubernetes/pkg/apis/policy"
 )
 
 // Resource data
@@ -76,8 +79,8 @@ type Service = v1.Service
 // Job data
 type Job = batchv1.Job
 
-// CronJob data
-type CronJob = batchv1.CronJob
+// PodSecurityPolicy data
+type PodSecurityPolicy = policy.PodSecurityPolicy
 
 const (
 	// PodPending phase

@@ -295,6 +295,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yashtewari/glob-intersection v0.0.0-20180916065949-5c77d914dd0b // indirect
 	go.uber.org/goleak v1.0.0
+	k8s.io/kubernetes v1.13.0
 )
 
 replace (

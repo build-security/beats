@@ -25,10 +25,10 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/kubernetes/pkg/apis/policy"
 )
 
 // Resource data
@@ -95,7 +95,7 @@ type ClusterRole = rbacv1.ClusterRole
 type ClusterRoleBinding = rbacv1.ClusterRoleBinding
 
 // PodSecurityPolicy data
-type PodSecurityPolicy = policy.PodSecurityPolicy
+type PodSecurityPolicy = policyv1beta1.PodSecurityPolicy
 
 // NetworkPolicy data
 type NetworkPolicy = networkingv1.NetworkPolicy

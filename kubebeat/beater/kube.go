@@ -1,14 +1,12 @@
 package beater
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -40,6 +38,9 @@ func (f *KubeFetcher) initWatcher(w kubernetes.Watcher, err error) error {
 		return fmt.Errorf("could not create watcher: %w", err)
 	}
 
+	// TODO(yashtewari): it appears that Start never returns in case of certain failures, for example
+	// if the configured client role does not have the necessary permissions to list the
+	// resource being watched. This needs to be handled.
 	if err := w.Start(); err != nil {
 		return fmt.Errorf("could not start watcher: %w", err)
 	}
@@ -57,8 +58,7 @@ func (f *KubeFetcher) initWatchers() error {
 
 	logp.Info("Kubernetes client initiated.")
 
-	psp, err := client.CoreV1().Pods("kube-system").List(context.Background(), v1.ListOptions{})
-	fmt.Println("RAW PSP, ERR", psp, err)
+	f.watchers = make([]kubernetes.Watcher, 0)
 
 	watchOptions := kubernetes.WatchOptions{
 		SyncTimeout: f.interval,
@@ -73,9 +73,15 @@ func (f *KubeFetcher) initWatchers() error {
 		&kubernetes.ClusterRole{},
 		&kubernetes.ClusterRoleBinding{},
 		&kubernetes.PodSecurityPolicy{},
-		&kubernetes.NetworkPolicy{},
+		// TODO(yashtewari): Problem: github.com/elastic/beats/vendor/k8s.io/apimachinery/pkg/api/errors/errors.go#401
+		// > "the server could not find the requested resource"
+		//
+		// &kubernetes.NetworkPolicy{},
 	} {
-		f.initWatcher(kubernetes.NewWatcher(client, r, watchOptions, nil))
+		err := f.initWatcher(kubernetes.NewWatcher(client, r, watchOptions, nil))
+		if err != nil {
+			return err
+		}
 	}
 
 	logp.Info("Kubernetes Watchers initiated.")
@@ -89,6 +95,8 @@ func (f *KubeFetcher) Fetch() ([]interface{}, error) {
 		err = f.initWatchers()
 	})
 	if err != nil {
+		// Reset because not initialised properly.
+		watcherlock = sync.Once{}
 		return nil, err
 	}
 
@@ -105,7 +113,6 @@ func (f *KubeFetcher) Fetch() ([]interface{}, error) {
 				continue
 			}
 
-			// o.SetManagedFields(nil) -- TODO(yashtewari): What was this supposed to do?
 			addTypeInformationToObject(o) // see https://github.com/kubernetes/kubernetes/issues/3030. TODO(yashtewari): Does this still apply for PodSecurityPolicy?
 		}
 

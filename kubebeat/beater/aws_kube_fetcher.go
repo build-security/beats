@@ -111,6 +111,11 @@ func (f AwsKubeFetcher) GetLoadBalancerDescriptions() ([]elasticloadbalancing.Lo
 
 	// TODO - leader election
 	services, err := f.kubeClient.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		logp.Err("Failed to get all services  - %+v", err)
+		return nil, err
+	}
+
 	loadBalancers := make([]string, 0)
 	for _, service := range services.Items {
 
@@ -121,10 +126,6 @@ func (f AwsKubeFetcher) GetLoadBalancerDescriptions() ([]elasticloadbalancing.Lo
 				loadBalancers = append(loadBalancers, lbName)
 			}
 		}
-	}
-	if err != nil {
-		logp.Err("Failed to get all services  - %+v", err)
-		return nil, err
 	}
 
 	ctx2, cancel2 := context.WithTimeout(context.TODO(), 30*time.Second)
@@ -143,14 +144,14 @@ func (f AwsKubeFetcher) GetNodeDescription() ([]interface{}, error) {
 
 	// TODO - leader election
 	nodeList, err := f.kubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		logp.Err("Failed to get all nodes information  - %+v", err)
+		return nil, err
+	}
 	nodesInfo := make([]interface{}, 0)
 	for _, node := range nodeList.Items {
 
 		nodesInfo = append(nodesInfo, node)
-	}
-	if err != nil {
-		logp.Err("Failed to get all nodes information  - %+v", err)
-		return nil, err
 	}
 
 	return nodesInfo, err

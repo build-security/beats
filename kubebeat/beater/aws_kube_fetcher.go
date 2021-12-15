@@ -95,10 +95,10 @@ func (f AwsKubeFetcher) GetECRInformation() ([]ecr.Repository, error) {
 	// TODO - Currently we do not know how to extract the ECR repository out of the image
 	// When we would know, we need to scan all the pods and gets their images
 	// Otherwise it will get repositories that are not associated with this cluster
-	ctx2, cancel := context.WithTimeout(context.TODO(), 150*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 150*time.Second)
 	defer cancel()
 
-	repositories, err := f.ecr.DescribeRepositories(f.cfg, ctx2, nil)
+	repositories, err := f.ecr.DescribeRepositories(f.cfg, ctx, nil)
 
 	return repositories, err
 }

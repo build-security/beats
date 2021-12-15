@@ -21,7 +21,7 @@ func (provider ELBProvider) DescribeLoadBalancer(cfg aws.Config, ctx context.Con
 	req := svc.DescribeLoadBalancersRequest(input)
 	response, err := req.Send(ctx)
 	if err != nil {
-		logp.Err("Failed to describe cluster %s from ecr, error - %+v", balancersNames, err)
+		logp.Err("Failed to describe load blancers %s from elb, error - %+v", balancersNames, err)
 		return nil, err
 	}
 

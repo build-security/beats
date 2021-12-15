@@ -14,13 +14,13 @@ type IamProvider struct {
 func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, roleName string) (interface{}, error) {
 
 	results := make([]interface{}, 0)
-	policiesIdentifiers, err := f.getAllRolePolicies(cfg, ctx, roleName)
+	svc := iam.New(cfg)
+	policiesIdentifiers, err := f.getAllRolePolicies(svc, ctx, roleName)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)
 		return nil, err
 	}
 
-	svc := iam.New(cfg)
 	for _, policyId := range policiesIdentifiers {
 
 		input := &iam.GetRolePolicyInput{
@@ -39,11 +39,10 @@ func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, 
 	return results, nil
 }
 
-func (f IamProvider) getAllRolePolicies(cfg aws.Config, ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
+func (f IamProvider) getAllRolePolicies(svc *iam.Client, ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
 
-	svc := iam.New(cfg)
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: &roleName,
 	}

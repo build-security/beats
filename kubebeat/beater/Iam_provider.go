@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	"time"
 )
 
 type IamProvider struct {
@@ -40,8 +39,6 @@ func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, 
 }
 
 func (f IamProvider) getAllRolePolicies(svc *iam.Client, ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
 
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: &roleName,

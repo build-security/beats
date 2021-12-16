@@ -5,8 +5,8 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/elastic/beats/v7/libbeat/logp"
 	"io/fs"
-	"log"
 	"os"
 	"strings"
 
@@ -70,7 +70,8 @@ func createCISPolicy(fileSystem embed.FS) map[string]string {
 
 	fs.WalkDir(fileSystem, ".", func(filepath string, info os.DirEntry, err error) error {
 		if err != nil {
-			log.Fatal(err)
+			logp.Err("Failed to create CIS policy- %+v", err)
+			return nil
 		}
 		if info.IsDir() == false && strings.HasSuffix(info.Name(), ".rego") && !strings.HasSuffix(info.Name(), "test.rego") {
 

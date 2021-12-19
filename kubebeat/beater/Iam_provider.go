@@ -21,7 +21,7 @@ func NewIamProvider(cfg aws.Config) *IamProvider {
 func (f IamProvider) GetIamRolePermissions(ctx context.Context, roleName string) (interface{}, error) {
 
 	results := make([]interface{}, 0)
-	policiesIdentifiers, err := f.getAllRolePolicies(svc, ctx, roleName)
+	policiesIdentifiers, err := f.getAllRolePolicies(ctx, roleName)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)
 		return nil, err

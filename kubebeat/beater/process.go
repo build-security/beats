@@ -10,9 +10,9 @@ const (
 )
 
 type Process struct {
-	InputType string        `json:"inputType"`
+	InputType string        `json:"type"`
 	PID       string        `json:"pid"`
-	Cmd       string        `json:"cmd"`
+	Cmd       string        `json:"command"`
 	Stat      proc.ProcStat `json:"stat"`
 }
 

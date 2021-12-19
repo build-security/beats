@@ -9,9 +9,9 @@ spec:
     - key: node-role.kubernetes.io/master
       effect: NoSchedule
   containers:
-    - image: kubebeat
+    - image: 704479110758.dkr.ecr.us-east-2.amazonaws.com/kubebeat
       name: kubebeat-demo
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
       volumeMounts:
         - name: proc
           mountPath: /hostfs/proc

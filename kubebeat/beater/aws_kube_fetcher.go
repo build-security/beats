@@ -21,9 +21,9 @@ type AwsKubeFetcher struct {
 	clusterName string
 	cfg         aws.Config
 	kubeClient  k8s.Interface
-	ecr         ECRProvider
-	eks         EKSProvider
-	elb         ELBProvider
+	ecr         *ECRProvider
+	eks         *EKSProvider
+	elb         *ELBProvider
 }
 
 func NewAwsKubeFetcher(kubeconfig string, clusterName string) (Fetcher, error) {
@@ -38,9 +38,9 @@ func NewAwsKubeFetcher(kubeconfig string, clusterName string) (Fetcher, error) {
 		return nil, fmt.Errorf("fail init aws config: %s", err.Error())
 	}
 
-	ecr := ECRProvider{}
-	eks := EKSProvider{}
-	elb := ELBProvider{}
+	ecr := NewEcrProvider(cfg)
+	eks := NewEksProvider(cfg)
+	elb := NewELBProvider(cfg)
 
 	return &AwsKubeFetcher{
 		cfg:         cfg,
@@ -56,24 +56,24 @@ func (f AwsKubeFetcher) Fetch() ([]interface{}, error) {
 
 	results := make([]interface{}, 0)
 
-	ecrCtx, ecrCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	ecrCtx, ecrCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer ecrCtxCancel()
 	repositories, err := f.GetECRInformation(ecrCtx)
 	results = append(results, repositories)
 
-	clusterCtx, clusterCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	clusterCtx, clusterCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer clusterCtxCancel()
 	data, err := f.GetClusterDescription(clusterCtx)
 	results = append(results, data)
 
-	kubeCtx, kubeCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	kubeCtx, kubeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer kubeCtxCancel()
-	lbCtx, lbctxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	lbCtx, lbctxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer lbctxCancel()
 	lbData, err := f.GetLoadBalancerDescriptions(kubeCtx, lbCtx)
 	results = append(results, lbData)
 
-	nodeCtx, nodeCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	nodeCtx, nodeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer nodeCtxCancel()
 	nodeData, err := f.GetNodeDescription(nodeCtx)
 	results = append(results, nodeData)
@@ -90,7 +90,7 @@ func (f AwsKubeFetcher) GetClusterDescription(ctx context.Context) (*eks.Describ
 	// https://github.com/kubernetes/client-go/issues/530
 	// Currently we could not auto-detected the cluster name
 	// TODO - leader election
-	result, err := f.eks.DescribeCluster(f.cfg, ctx, f.clusterName)
+	result, err := f.eks.DescribeCluster(ctx, f.clusterName)
 
 	return result, err
 }
@@ -103,7 +103,7 @@ func (f AwsKubeFetcher) GetECRInformation(ctx context.Context) ([]ecr.Repository
 	// TODO - Currently we do not know how to extract the ECR repository out of the image
 	// When we would know, we need to scan all the pods and gets their images
 	// Otherwise it will get repositories that are not associated with this cluster
-	repositories, err := f.ecr.DescribeAllECRRepositories(f.cfg, ctx)
+	repositories, err := f.ecr.DescribeAllECRRepositories(ctx)
 
 	return repositories, err
 }
@@ -130,7 +130,7 @@ func (f AwsKubeFetcher) GetLoadBalancerDescriptions(kubectx context.Context, lbc
 			}
 		}
 	}
-	result, err := f.elb.DescribeLoadBalancer(f.cfg, lbctx, loadBalancers)
+	result, err := f.elb.DescribeLoadBalancer(lbctx, loadBalancers)
 
 	return result, err
 }

@@ -8,12 +8,19 @@ import (
 )
 
 type IamProvider struct {
+	client *iam.Client
 }
 
-func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, roleName string) (interface{}, error) {
+func NewIamProvider(cfg aws.Config) *IamProvider {
+	svc := iam.New(cfg)
+	return &IamProvider{
+		client: svc,
+	}
+}
+
+func (f IamProvider) GetIamRolePermissions(ctx context.Context, roleName string) (interface{}, error) {
 
 	results := make([]interface{}, 0)
-	svc := iam.New(cfg)
 	policiesIdentifiers, err := f.getAllRolePolicies(svc, ctx, roleName)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)
@@ -26,7 +33,7 @@ func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, 
 			PolicyName: policyId.PolicyName,
 			RoleName:   &roleName,
 		}
-		req := svc.GetRolePolicyRequest(input)
+		req := f.client.GetRolePolicyRequest(input)
 		policy, err := req.Send(ctx)
 		if err != nil {
 			logp.Err("Failed to get policy %s - %+v", *policyId.PolicyName, err)
@@ -38,13 +45,13 @@ func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, 
 	return results, nil
 }
 
-func (f IamProvider) getAllRolePolicies(svc *iam.Client, ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
+func (f IamProvider) getAllRolePolicies(ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
 
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: &roleName,
 	}
 
-	req := svc.ListAttachedRolePoliciesRequest(input)
+	req := f.client.ListAttachedRolePoliciesRequest(input)
 	allPolicies, err := req.Send(ctx)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)

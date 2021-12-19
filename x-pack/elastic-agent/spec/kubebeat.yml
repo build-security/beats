@@ -8,6 +8,8 @@ args: [
 ]
 restart_on_output_change: true
 artifact: beats/kubebeat
+action_input_types:
+- kubebeat
 
 rules:
 - fix_stream: {}

@@ -5,10 +5,16 @@ package config
 
 import "time"
 
+// Todo add consts as configurable vars from integration package
+const DefaultNamespace = "default"
+
+const datastreamPrefix = "logs-k8s_cis.result-"
+
 type Config struct {
 	KubeConfig string        `config:"kube_config"`
 	Period     time.Duration `config:"period"`
 	Files      []string      `config:"files"`
+	//Index      string        `config:"output.elasticsearch.index"`
 }
 
 var DefaultConfig = Config{
@@ -27,4 +33,12 @@ var DefaultConfig = Config{
 		"/hostfs/var/lib/etcd",
 		"/hostfs/etc/kubernetes/pki",
 	},
+	//Index: "logs-k8s_cis.result-default"
+}
+
+func Datastream(namespace string) string {
+	if namespace == "" {
+		namespace = DefaultNamespace
+	}
+	return datastreamPrefix + namespace
 }

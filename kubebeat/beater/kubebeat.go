@@ -93,15 +93,16 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			omap := o.(map[string][]interface{})
 
 			resourceCallback := func(resource interface{}) {
-				bt.resourceIteration(resource, runId, timestamp)
+				ns := ""
+				bt.resourceIteration(config.Datastream(ns), resource, runId, timestamp)
 			}
 
 			bt.scheduler.ScheduleResources(omap, resourceCallback)
 		}
 	}
 }
-
-func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID, timestamp time.Time) {
+// Todo - index param implemented as part of resource iteration might need refactoring
+func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
 
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
@@ -109,7 +110,7 @@ func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID, tim
 		return
 	}
 
-	events, err := bt.resultParser.ParseResult(result, runId, timestamp)
+	events, err := bt.resultParser.ParseResult(index, result, runId, timestamp)
 
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

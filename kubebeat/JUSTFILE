@@ -1,10 +1,16 @@
 create-kind-cluster:
   kind create cluster --config deploy/k8s/kind/kind-config.yaml
 
-build-agent-docker:
+build-kubebeat:
   GOOS=linux go build -v && docker build -t kubebeat .
 
-load-image-to-kind:
+build-kubebeat-debug:
+  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -gcflags "all=-N -l" && docker build -f Dockerfile.debug -t kubebeat .
+
+deploy-kubebeat-debug: build-kubebeat-debug load-image-kubebeat-kind
+  kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system && kubectl apply -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
+
+load-image-kubebeat-kind:
   kind load docker-image kubebeat:latest --name kind-mono
 
 deploy-beat-kind:
@@ -17,7 +23,7 @@ elastic-stack-up:
   elastic-package stack up --version=8.1.0-SNAPSHOT -p csp-demo -v 
 
 elastic-stack-down:
-  elastic-package stack down --version=8.1.0-SNAPSHOT -p csp-demo -v 
+  elastic-package stack down --version=8.1.0-SNAPSHOT -p csp-demo -v
 
 kibana-source-start:
   cd ../../kibana && yarn start

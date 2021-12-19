@@ -56,16 +56,26 @@ func (f AwsKubeFetcher) Fetch() ([]interface{}, error) {
 
 	results := make([]interface{}, 0)
 
-	repositories, err := f.GetECRInformation()
+	ecrCtx, ecrCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	defer ecrCtxCancel()
+	repositories, err := f.GetECRInformation(ecrCtx)
 	results = append(results, repositories)
 
-	data, err := f.GetClusterDescription()
+	clusterCtx, clusterCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	defer clusterCtxCancel()
+	data, err := f.GetClusterDescription(clusterCtx)
 	results = append(results, data)
 
-	lbData, err := f.GetLoadBalancerDescriptions()
+	kubeCtx, kubeCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	defer kubeCtxCancel()
+	lbCtx, lbctxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	defer lbctxCancel()
+	lbData, err := f.GetLoadBalancerDescriptions(kubeCtx, lbCtx)
 	results = append(results, lbData)
 
-	nodeData, err := f.GetNodeDescription()
+	nodeCtx, nodeCtxCancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+	defer nodeCtxCancel()
+	nodeData, err := f.GetNodeDescription(nodeCtx)
 	results = append(results, nodeData)
 
 	return results, err
@@ -75,45 +85,35 @@ func (f AwsKubeFetcher) Fetch() ([]interface{}, error) {
 // 5.3.1 - Ensure Kubernetes Secrets are encrypted using Customer Master Keys (CMKs) managed in AWS KMS (Automated)
 // 5.4.1 - Restrict Access to the Control Plane Endpoint (Manual)
 // 5.4.2 - Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled (Manual)
-func (f AwsKubeFetcher) GetClusterDescription() (*eks.DescribeClusterResponse, error) {
+func (f AwsKubeFetcher) GetClusterDescription(ctx context.Context) (*eks.DescribeClusterResponse, error) {
 
 	// https://github.com/kubernetes/client-go/issues/530
 	// Currently we could not auto-detected the cluster name
-
 	// TODO - leader election
-	ctx2, cancel2 := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel2()
-
-	result, err := f.eks.DescribeCluster(f.cfg, ctx2, f.clusterName)
+	result, err := f.eks.DescribeCluster(f.cfg, ctx, f.clusterName)
 
 	return result, err
 }
 
 // EKS benchmark 5.1.1 -  Ensure Image Vulnerability Scanning using Amazon ECR image scanning or a third party provider (Manual)
-func (f AwsKubeFetcher) GetECRInformation() ([]ecr.Repository, error) {
+func (f AwsKubeFetcher) GetECRInformation(ctx context.Context) ([]ecr.Repository, error) {
 
 	// TODO - Need to use leader election
 
 	// TODO - Currently we do not know how to extract the ECR repository out of the image
 	// When we would know, we need to scan all the pods and gets their images
 	// Otherwise it will get repositories that are not associated with this cluster
-	ctx, cancel := context.WithTimeout(context.TODO(), 150*time.Second)
-	defer cancel()
-
-	repositories, err := f.ecr.DescribeRepositories(f.cfg, ctx, nil)
+	repositories, err := f.ecr.DescribeAllECRRepositories(f.cfg, ctx)
 
 	return repositories, err
 }
 
 // EKS benchmark 5.4.5 -  Encrypt traffic to HTTPS load balancers with TLS certificates (Manual)
-func (f AwsKubeFetcher) GetLoadBalancerDescriptions() ([]elasticloadbalancing.LoadBalancerDescription, error) {
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
+func (f AwsKubeFetcher) GetLoadBalancerDescriptions(kubectx context.Context, lbctx context.Context) ([]elasticloadbalancing.LoadBalancerDescription, error) {
 
 	// TODO - leader election
 	// Running on all namespaces
-	services, err := f.kubeClient.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	services, err := f.kubeClient.CoreV1().Services("").List(kubectx, metav1.ListOptions{})
 	if err != nil {
 		logp.Err("Failed to get all services  - %+v", err)
 		return nil, err
@@ -130,20 +130,13 @@ func (f AwsKubeFetcher) GetLoadBalancerDescriptions() ([]elasticloadbalancing.Lo
 			}
 		}
 	}
-
-	ctx2, cancel2 := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel2()
-
-	result, err := f.elb.DescribeLoadBalancer(f.cfg, ctx2, loadBalancers)
+	result, err := f.elb.DescribeLoadBalancer(f.cfg, lbctx, loadBalancers)
 
 	return result, err
 }
 
 // EKS benchmark 5.4.3 Ensure clusters are created with Private Nodes (Manual)
-func (f AwsKubeFetcher) GetNodeDescription() ([]v1.Node, error) {
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
+func (f AwsKubeFetcher) GetNodeDescription(ctx context.Context) ([]v1.Node, error) {
 
 	// TODO - leader election
 	nodeList, err := f.kubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -152,7 +145,7 @@ func (f AwsKubeFetcher) GetNodeDescription() ([]v1.Node, error) {
 		return nil, err
 	}
 
-	return nodeList.Items , nil
+	return nodeList.Items, nil
 }
 
 func (f AwsKubeFetcher) Stop() {

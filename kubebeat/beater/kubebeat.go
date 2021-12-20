@@ -98,7 +98,6 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 }
 
 func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID, timestamp time.Time) {
-
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

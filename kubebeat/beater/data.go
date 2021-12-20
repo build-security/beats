@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
@@ -113,7 +114,7 @@ func (d *Data) fetchManager(updates chan update) {
 			c, err := copy(d.state)
 			if err != nil {
 				logp.L().Errorf("could not copy data state: %v", err)
-				return
+				continue
 			}
 
 			d.output <- c
@@ -160,4 +161,11 @@ func init() {
 	gob.Register([]interface{}{})
 	gob.Register(Process{})
 	gob.Register(FileSystemResourceData{})
+	gob.Register(kubernetes.Pod{})
+	gob.Register(kubernetes.Secret{})
+	gob.Register(kubernetes.Role{})
+	gob.Register(kubernetes.RoleBinding{})
+	gob.Register(kubernetes.ClusterRole{})
+	gob.Register(kubernetes.ClusterRoleBinding{})
+	gob.Register(kubernetes.NetworkPolicy{})
 }

@@ -10,11 +10,14 @@ const DefaultNamespace = "default"
 
 const datastreamPrefix = "logs-k8s_cis.result-"
 
+type DatastreamConfig struct {
+	Namespace string `config:"namespace"`
+}
+
 type Config struct {
 	KubeConfig string        `config:"kube_config"`
 	Period     time.Duration `config:"period"`
 	Files      []string      `config:"files"`
-	//Index      string        `config:"output.elasticsearch.index"`
 }
 
 var DefaultConfig = Config{
@@ -33,9 +36,10 @@ var DefaultConfig = Config{
 		"/hostfs/var/lib/etcd",
 		"/hostfs/etc/kubernetes/pki",
 	},
-	//Index: "logs-k8s_cis.result-default"
+
 }
 
+// function to generate the datastream value
 func Datastream(namespace string) string {
 	if namespace == "" {
 		namespace = DefaultNamespace

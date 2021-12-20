@@ -1,29 +1,44 @@
 create-kind-cluster:
   kind create cluster --config deploy/k8s/kind/kind-config.yaml
 
+load-kubebeat-image:
+  kind load docker-image kubebeat:latest --name kind-mono
+
+load-agent-image:
+  kind load docker-image docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT --name kind-mono
+
 build-kubebeat:
   GOOS=linux go build -v && docker build -t kubebeat .
+
+deploy-kubebeat:
+  kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system & kubectl apply -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
+
+build-deploy-kubebeat: build-kubebeat-debug load-kubebeat-image deploy-kubebeat-debug
 
 build-kubebeat-debug:
   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -gcflags "all=-N -l" && docker build -f Dockerfile.debug -t kubebeat .
 
-deploy-kubebeat-debug: build-kubebeat-debug load-image-kubebeat-kind
+deploy-kubebeat-debug:
   kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system && kubectl apply -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
 
-load-image-kubebeat-kind:
-  kind load docker-image kubebeat:latest --name kind-mono
+build-deploy-kubebeat-debug: build-kubebeat-debug load-kubebeat-image deploy-kubebeat-debug
 
-deploy-beat-kind:
-  kubectl delete -f deploy/k8s/kubebeat-standalone-ds.yaml; kubectl apply -f deploy/k8s/kubebeat-standalone-ds.yaml
+package-agent:
+  DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
+
+deploy-agent:
+  kubectl delete -f deploy/k8s/agent-kubebeat-fleet-managed-ds-local.yaml -n kube-system & kubectl apply -f deploy/k8s//agent-kubebeat-fleet-managed-ds-local.yaml -n kube-system
+
+build-deploy-agent: package-agent load-agent-image deploy-agent
 
 build-kibana-docker:
   node scripts/build --docker-images --skip-docker-ubi --skip-docker-centos -v
 
 elastic-stack-up:
-  elastic-package stack up --version=8.1.0-SNAPSHOT -p csp-demo -v 
+  elastic-package stack up --version=8.1.0-SNAPSHOT
 
 elastic-stack-down:
-  elastic-package stack down --version=8.1.0-SNAPSHOT -p csp-demo -v
+  elastic-package stack down
 
 kibana-source-start:
   cd ../../kibana && yarn start

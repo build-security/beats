@@ -1,10 +1,10 @@
 package beater
 
 import (
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
 
 	"github.com/elastic/beats/v7/libbeat/beat"
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
 
 	"github.com/gofrs/uuid"
@@ -40,9 +40,10 @@ func (parser *evaluationResultParser) ParseResult(index, result interface{}, uui
 				"rule":     finding.Rule,
 			},
 		}
-		// Insert datastream as raw index to event
+		// Insert datastream as index to event struct
 	if index != "" {
-		event.Meta = common.MapStr{libevents.FieldMetaRawIndex: index}
+
+		event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
 	}
 
 		events = append(events, event)

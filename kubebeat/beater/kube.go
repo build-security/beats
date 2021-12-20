@@ -109,11 +109,11 @@ func (f *KubeFetcher) Fetch() ([]interface{}, error) {
 			o, ok := r.(runtime.Object)
 
 			if !ok {
-				logp.L().Errorf("bad resource: %#v does not implement runtime.Object", r)
+				logp.L().Errorf("Bad resource: %#v does not implement runtime.Object", r)
 				continue
 			}
 
-			addTypeInformationToObject(o) // see https://github.com/kubernetes/kubernetes/issues/3030. TODO(yashtewari): Does this still apply for PodSecurityPolicy?
+			addTypeInformationToObject(o) // See https://github.com/kubernetes/kubernetes/issues/3030
 		}
 
 		ret = append(ret, resources...)

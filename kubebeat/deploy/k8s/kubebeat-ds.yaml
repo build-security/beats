@@ -24,11 +24,11 @@ spec:
       - name: kubebeat
         image: kubebeat
         imagePullPolicy: IfNotPresent
-        # args: [
-        #   "-e",
-        #   "-d", 
-        #   "'*'"
-        #   ]
+         args: [
+           "-e",
+           "-d",
+           "'*'"
+           ]
         env:
         - name: ES_HOSTS
           value: "host.docker.internal:9200"
@@ -51,11 +51,11 @@ spec:
           # If using Red Hat OpenShift uncomment this:
           #privileged: true
         resources:
-          # limits:
-          #   memory: 200Mi
+          limits:
+            memory: 500Mi
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 200Mi
         volumeMounts:
         - name: config
           mountPath: /kubebeat.yml

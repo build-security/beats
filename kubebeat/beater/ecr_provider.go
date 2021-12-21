@@ -32,9 +32,6 @@ func (provider ECRProvider) DescribeRepositories(ctx context.Context, repoNames 
 	input := &ecr.DescribeRepositoriesInput{
 		RepositoryNames: repoNames,
 	}
-
-	logp.Err("Failed to fetch repository:%s from ecr, error - %+v", repoNames)
-
 	req := provider.client.DescribeRepositoriesRequest(input)
 	response, err := req.Send(ctx)
 	if err != nil {

@@ -22,7 +22,6 @@ func (provider EKSProvider) DescribeCluster(ctx context.Context, clusterName str
 	input := &eks.DescribeClusterInput{
 		Name: &clusterName,
 	}
-
 	req := provider.client.DescribeClusterRequest(input)
 	response, err := req.Send(ctx)
 	if err != nil {

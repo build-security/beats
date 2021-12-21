@@ -52,31 +52,46 @@ func NewAwsKubeFetcher(kubeconfig string, clusterName string) (Fetcher, error) {
 	}, nil
 }
 
+func dump(items []interface{}) {
+	logp.Info("Started dump ")
+
+	for i := 0; i < len(items); i++ {
+		logp.Info("%v",items[i])
+	}
+
+	logp.Info("Finished dump ")
+
+}
+
 func (f AwsKubeFetcher) Fetch() ([]interface{}, error) {
 
 	results := make([]interface{}, 0)
 
-	ecrCtx, ecrCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer ecrCtxCancel()
-	repositories, err := f.GetECRInformation(ecrCtx)
-	results = append(results, repositories)
+	//ecrCtx, ecrCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	//defer ecrCtxCancel()
+	//repositories, err := f.GetECRInformation(ecrCtx)
+	//results = append(results, repositories)
+
+	logp.Info("ClusterCtx result started.")
 
 	clusterCtx, clusterCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer clusterCtxCancel()
 	data, err := f.GetClusterDescription(clusterCtx)
 	results = append(results, data)
+	dump(results)
+	logp.Info("ClusterCtx result finished")
 
-	kubeCtx, kubeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer kubeCtxCancel()
-	lbCtx, lbctxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer lbctxCancel()
-	lbData, err := f.GetLoadBalancerDescriptions(kubeCtx, lbCtx)
-	results = append(results, lbData)
+	//kubeCtx, kubeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	//defer kubeCtxCancel()
+	//lbCtx, lbctxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	//defer lbctxCancel()
+	//lbData, err := f.GetLoadBalancerDescriptions(kubeCtx, lbCtx)
+	//results = append(results, lbData)
 
-	nodeCtx, nodeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer nodeCtxCancel()
-	nodeData, err := f.GetNodeDescription(nodeCtx)
-	results = append(results, nodeData)
+	//nodeCtx, nodeCtxCancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	//defer nodeCtxCancel()
+	//nodeData, err := f.GetNodeDescription(nodeCtx)
+	//results = append(results, nodeData)
 
 	return results, err
 }
@@ -85,14 +100,14 @@ func (f AwsKubeFetcher) Fetch() ([]interface{}, error) {
 // 5.3.1 - Ensure Kubernetes Secrets are encrypted using Customer Master Keys (CMKs) managed in AWS KMS (Automated)
 // 5.4.1 - Restrict Access to the Control Plane Endpoint (Manual)
 // 5.4.2 - Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled (Manual)
-func (f AwsKubeFetcher) GetClusterDescription(ctx context.Context) (*eks.DescribeClusterResponse, error) {
+func (f AwsKubeFetcher) GetClusterDescription(ctx context.Context) (*eks.Cluster, error) {
 
 	// https://github.com/kubernetes/client-go/issues/530
 	// Currently we could not auto-detected the cluster name
 	// TODO - leader election
 	result, err := f.eks.DescribeCluster(ctx, f.clusterName)
 
-	return result, err
+	return result.Cluster, err
 }
 
 // EKS benchmark 5.1.1 -  Ensure Image Vulnerability Scanning using Amazon ECR image scanning or a third party provider (Manual)

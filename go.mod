@@ -283,8 +283,6 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-require go.uber.org/goleak v1.0.0
-
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/bytecodealliance/wasmtime-go v0.30.0 // indirect

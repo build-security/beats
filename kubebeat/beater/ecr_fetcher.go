@@ -20,7 +20,7 @@ func NewECRFetcher(cfg aws.Config) (Fetcher, error) {
 func (f ECRFetcher) Fetch() ([]interface{}, error) {
 	results := make([]interface{}, 0)
 	ctx := context.Background()
-	// TODO - The provider should get a list of the repository it needs to check, and not check the entire ECR account`
+	// TODO - The provider should get a list of the repositories it needs to check, and not check the entire ECR account`
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
 	results = append(results, repositories)
 

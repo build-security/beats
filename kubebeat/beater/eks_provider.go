@@ -25,7 +25,7 @@ func (provider EKSProvider) DescribeCluster(ctx context.Context, clusterName str
 	req := provider.client.DescribeClusterRequest(input)
 	response, err := req.Send(ctx)
 	if err != nil {
-		logp.Err("Failed to describe cluster %s from eksgit , error - %+v", clusterName, err)
+		logp.Err("Failed to describe cluster %s from eks , error - %+v", clusterName, err)
 		return nil, err
 	}
 

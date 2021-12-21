@@ -93,6 +93,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			omap := o.(map[string][]interface{})
 
 			resourceCallback := func(resource interface{}) {
+				// ns will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
 				ns := ""
 				bt.resourceIteration(config.Datastream(ns), resource, runId, timestamp)
 			}
@@ -101,7 +102,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		}
 	}
 }
-// Todo - index param implemented as part of resource iteration might need refactoring
+// Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
 func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
 
 	result, err := bt.eval.Decision(resource)
@@ -109,7 +110,7 @@ func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UU
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return
 	}
-
+	//Todo index added to Parse result since currently that's where event fields are appended - Should later be split on some critiria(stream,fetcher or datasource) with an util function to handle the ds provision
 	events, err := bt.resultParser.ParseResult(index, result, runId, timestamp)
 
 	if err != nil {
@@ -127,5 +128,3 @@ func (bt *kubebeat) Stop() {
 
 	close(bt.done)
 }
-
-// Todo Add registeraction handlers see x-pack/osquerybeat/beater/osquerybeat.go for example

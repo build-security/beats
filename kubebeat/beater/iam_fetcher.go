@@ -20,9 +20,6 @@ func NewIAMFetcher(cfg aws.Config, roleName string) (Fetcher, error) {
 }
 
 func (f IAMFetcher) Fetch() ([]interface{}, error) {
-	// https://github.com/kubernetes/client-go/issues/530
-	// Currently we could not auto-detected the cluster name
-	// TODO - leader election
 	results := make([]interface{}, 0)
 	ctx := context.Background()
 	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.roleName)

@@ -56,7 +56,7 @@ func dump(items []interface{}) {
 	logp.Info("Started dump ")
 
 	for i := 0; i < len(items); i++ {
-		logp.Info("%v",items[i])
+		logp.Info("%v", items[i])
 	}
 
 	logp.Info("Finished dump ")

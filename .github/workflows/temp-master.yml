@@ -77,7 +77,8 @@ jobs:
           secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: opabeat:latest
-          image: ${{ env.OPABEAT_IMAGE }}, ${{ env.OPABEAT_IMAGE_BASE}}:csp-latest
+          # image: ${{ env.OPABEAT_IMAGE }}, ${{ env.OPABEAT_IMAGE_BASE}}:csp-latest
+          image: ${{ github.sha }}, csp-latest
       # - name: Notify job failure
       #   if: failure()
       #   uses: archive/github-actions-slack@v1.0.3

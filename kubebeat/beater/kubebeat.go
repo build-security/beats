@@ -101,14 +101,10 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		}
 	}
 }
-<<<<<<< HEAD
+
 // Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
 func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
 
-=======
-
-func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID, timestamp time.Time) {
->>>>>>> master
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

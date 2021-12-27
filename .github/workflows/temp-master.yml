@@ -66,16 +66,15 @@ jobs:
         run: |
             GOOS=linux go build -v && docker build -t opabeat .
 
-      - name: Build and push OPABEAT
-        id: docker_build_Opabeat
-        uses: docker/build-push-action@v2.1.0
+      - name: Push to ECR
+        id: ecr
+        uses: jwalton/gh-ecr-push@v1
         with:
-          builder: ${{ steps.buildx.outputs.name }}
-          file: kubebeat/Dockerfile
-          push: true
-          tags: |
-            ${{ env.OPABEAT_IMAGE_BASE }}:csp-latest
-            ${{ env.OPABEAT_IMAGE }}
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-1
+          local-image: opabeat:latest
+          image: ${{ env.OPABEAT_IMAGE_BASE }}, ${{ env.OPABEAT_IMAGE}}:csp-latest
       # - name: Notify job failure
       #   if: failure()
       #   uses: archive/github-actions-slack@v1.0.3
@@ -97,14 +96,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: add rego repo ssh key
+        uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 
+        with:
+          ssh-private-key: |
+                ${{ secrets.REGO_LIB_KEY }}
+          repo-mappings: |
+            github.com/elastic/csp-security-policies
+
       - name: Check out the repo
         uses: actions/checkout@v2
-
-      - name: Checkout submodules
-        uses: srt32/git-actions@v0.0.3
         with:
-          args: git submodule update --init --recursive
-
+          submodules: recursive
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master

@@ -11,7 +11,7 @@ spec:
   containers:
     - image: kubebeat
       name: kubebeat-demo
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
       volumeMounts:
         - name: proc
           mountPath: /hostfs/proc

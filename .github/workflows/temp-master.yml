@@ -77,7 +77,7 @@ jobs:
           secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: opabeat:latest
-          image: ${{ env.OPABEAT_IMAGE_BASE }}, ${{ env.OPABEAT_IMAGE}}:csp-latest
+          image: ${{ env.OPABEAT_IMAGE }}, ${{ env.OPABEAT_IMAGE_BASE}}:csp-latest
       # - name: Notify job failure
       #   if: failure()
       #   uses: archive/github-actions-slack@v1.0.3
@@ -145,7 +145,7 @@ jobs:
           secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
-          image: ${{ env.AGENT_IMAGE_BASE }}, ${{ env.AGENT_IMAGE}}:csp-latest
+          image: ${{ env.AGENT_IMAGE }}, ${{ env.AGENT_IMAGE_BASE}}:csp-latest
 
       # - name: Notify job failure
       #   if: failure()

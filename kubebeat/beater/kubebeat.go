@@ -101,10 +101,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		}
 	}
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> master
 // Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
 func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
 

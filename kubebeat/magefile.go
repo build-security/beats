@@ -56,6 +56,7 @@ func Build() error {
 	return nil
 
 }
+// Todo write mage build & package functions for kubebeat
 
 // Clean cleans all generated files and build artifacts.
 func Clean() error {

@@ -24,11 +24,11 @@ spec:
       - name: kubebeat
         image: kubebeat
         imagePullPolicy: IfNotPresent
-        # args: [
-        #   "-e",
-        #   "-d", 
-        #   "'*'"
-        #   ]
+#         args: [
+#           "-e",
+#           "-d",
+#           "'*'"
+#           ]
         env:
         - name: ES_HOSTS
           value: "host.docker.internal:9200"
@@ -52,10 +52,10 @@ spec:
           #privileged: true
         resources:
           limits:
-            memory: 200Mi
+            memory: 500Mi
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 200Mi
         volumeMounts:
         - name: config
           mountPath: /kubebeat.yml
@@ -151,7 +151,7 @@ data:
     setup.kibana:
 
       # Kibana Host
-      host: "http://host.minikube.internal:5601"
+      host: "http://host.docker.internal:5601"
       # Host url for kind k8s - for minikube change to  host.minikube.internal
     # =============================== Elastic Cloud ================================
 
@@ -170,7 +170,7 @@ data:
     output.elasticsearch:
       # Array of hosts to connect to.
       # Host url for kind k8s - for minikube change to  host.minikube.internal
-      hosts: ["host.minikube.internal:9200"]
+      hosts: ["host.docker.internal:9200"]
 
       # Protocol - either `http` (default) or `https`.
       #protocol: "https"

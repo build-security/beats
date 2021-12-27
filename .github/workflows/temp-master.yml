@@ -7,11 +7,11 @@ on:
 
 env:
   OPABEAT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
-  OPABEAT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/build.security
-  OPABEAT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/build.security:${{ github.sha }}
+  OPABEAT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/opabeat
+  OPABEAT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/opabeat:${{ github.sha }}
   AGENT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
-  AGENT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/build.security
-  AGENT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/build.security:${{ github.sha }}
+  AGENT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent
+  AGENT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent:${{ github.sha }}
   DEV: true
   SNAPSHOT: true
   PLATFORMS: linux/amd64
@@ -59,8 +59,8 @@ jobs:
           file: kubebeat/Dockerfile
           push: true
           tags: |
-            ${{ env.OPABEAT_IMAGE }}:csp-latest
-            ${{ env.OPABEAT_IMAGE }}:${{ github.sha }}
+            ${{ env.OPABEAT_IMAGE_BASE }}:csp-latest
+            ${{ env.OPABEAT_IMAGE }}
       # - name: Notify job failure
       #   if: failure()
       #   uses: archive/github-actions-slack@v1.0.3
@@ -118,7 +118,7 @@ jobs:
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           region: us-east-1
           local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
-          image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT-${{ github.sha }}, docker.elastic.co/beats/elastic-agent:csp-latest
+          image: ${{ env.AGENT_IMAGE_BASE }}, ${{ env.AGENT_IMAGE}}:csp-latest
 
       # - name: Notify job failure
       #   if: failure()

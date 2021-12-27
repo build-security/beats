@@ -26,6 +26,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 
+        with:
+          ssh-private-key: |
+                ${{ secrets.REGO_LIB_KEY }}
+          repo-mappings: |
+            github.com/elastic/csp-security-policies
+
       - name: Checkout submodules
         uses: srt32/git-actions@v0.0.3
         with:

@@ -90,7 +90,6 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		case o := <-output:
 			timestamp := time.Now()
 			runId, _ := uuid.NewV4()
-			omap := o.(map[string][]interface{})
 
 			resourceCallback := func(resource interface{}) {
 				// ns will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
@@ -98,10 +97,14 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 				bt.resourceIteration(config.Datastream(ns), resource, runId, timestamp)
 			}
 
-			bt.scheduler.ScheduleResources(omap, resourceCallback)
+			bt.scheduler.ScheduleResources(o, resourceCallback)
 		}
 	}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 // Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
 func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
 

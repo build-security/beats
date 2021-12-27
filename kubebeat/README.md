@@ -7,7 +7,7 @@ The interesting files are:
 * `beater/kubebeat.go` - the beats logic
 * `kubebeat.yml` - the beats config
 * `Dockerfile` - runs the beat dockerized with debug flags
-* `pod.yaml` - deploy the beat
+* `JUSTFILE` - just commander file
 
 
 ## Table of contents
@@ -36,96 +36,75 @@ The interesting files are:
 
 1. Elasticsearch with the default username & password (`elastic` & `changeme`) running on the default port (`http://localhost:9200`)
 2. Kibana with running on the default port (`http://localhost:5601`)
-3. Minikube cluster running locally (`minikube start`)
+3. kind k8s cluster running locally
+4. [Just command runner](https://github.com/casey/just)
 
 
-4. Clone the git submodule of the CIS rules:
+5. Clone the git submodule of the CIS rules:
 ```
     $ git submodule update --init
 ```
-5. Comment the Rego code that uses data.yaml (Temporary fix) - go to compliance/cis_k8s/cis_k8s.rego and comment the following line of code:
+6. Comment the Rego code that uses data.yaml (Temporary fix) - go to compliance/cis_k8s/cis_k8s.rego and comment the following line of code:
 
-    ```
+```yml
     data.activated_rules.cis_k8s[rule_id]
+```
+
+8. Install just
+    ```zsh
+    $ brew install just
    ```
 
-6. Use the patch file to change the configuration for Minikube (or change the configuration according to your setup):
+9. Setup the local env:
+```zsh
+   $ cd kubebeat & just setup-local-env
+```
 
-    ```
-    patch kubebeat.yml kubebeat_minikube.yml.patch
-   ```
+## Running Kubebeat(without the agent)
 
-## Running the Kubebeat
+Build & deploy kubebeat:
 
-Compile the application for Linux:
-
-    GOOS=linux go build
-
-Then package it to a docker image using the provided Dockerfile to run it on Kubernetes:
-
-Running a [Minikube](https://minikube.sigs.k8s.io/docs/) cluster, you can build this image directly on the Docker engine of the Minikube node without pushing it to a registry. To build the image on Minikube:
-
-    eval $(minikube docker-env)
-    docker build -t kubebeat .
-
-If you are not using Minikube, you should build this image and push it to a registry that your Kubernetes cluster can pull from.
-
-If you have RBAC enabled on your cluster, use the following snippet to create role binding which will grant the default service account view permissions:
-
-    kubectl create clusterrolebinding default-view --clusterrole=view --serviceaccount=default:default
-
-Then, run the image in a Pod with a single instance Deployment:
-
-    kubectl apply -f pod.yml
-
-The example now sends requests to the Kubernetes API and sends to elastic events with pod information from the cluster every 5 seconds.
+```zsh
+$ just build-deploy-kubebeat
+```
 
 To validate check the logs:
 
-    kubectl logs -f kubebeat-demo
+```zsh
+$ kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
+```
 
-Now go and check out the data on your Kibana! Make sure to add an index pattern `kubebeat*`
+Now go and check out the data on your Kibana! Make sure to add a kibana dataview `logs-k8s_cis.result-*`
 
 note: when changing the fields kibana will reject events dent from the kubebeat for not matching the existing scheme. make sure to delete the index when changing the event fields in your code.
 
 ### Clean up
 
 To stop this example and clean up the pod, run:
-
-    kubectl delete pod kubebeat-demo
-
+```zsh
+$ kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
+```
 ### Remote Debugging
 
-Build binary:
+Build & Deploy remote debug docker:
 
-    GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -gcflags "all=-N -l"
-
-Then use the patch file to change the configuration for Minikube (Only Once):
-
-    patch kubebeat.yml kubebeat_minikube.yml.patch
-
-Then package it to a docker image using the provided Dockerfile to run it on Kubernetes:
-
-Running a [Minikube](https://minikube.sigs.k8s.io/docs/) cluster, you can build this image directly on the Docker engine of the Minikube node without pushing it to a registry. To build the image on Minikube:
-
-    eval $(minikube docker-env)
-    docker build -f Dockerfile.debug -t kubebeat .
-
-If you are not using Minikube, you should build this image and push it to a registry that your Kubernetes cluster can pull from.
-
-If you have RBAC enabled on your cluster, use the following snippet to create role binding which will grant the default service account view permissions(Only Once):
-
-    kubectl create clusterrolebinding default-view --clusterrole=view --serviceaccount=default:default
+```zsh
+$ just build-deploy-kubebeat-debug
+```
 
 After running the pod, expose the relevant ports:
-
-    kubectl port-forward kubebeat-demo 40000:40000 8080:8080
+```zsh
+$ kubectl port-forward ${pod-name} 40000:40000 8080:8080
+```
 
 The app will wait for the debugger to connect before starting
 
-    ❯ kubectl logs -f kubebeat-demo
+```zsh
+$ kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
 
     API server listening at: [::]:40000
+```
+
 Use your favorite IDE to connect to the debugger on `localhost:40000` (for example [Goland](https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-3-create-the-remote-run-debug-configuration-on-the-client-computer))
 
 # {Beat}
@@ -258,50 +237,21 @@ $ git submodule update --init
 ```
 $ cd x-pack/elastic-agent
 ```
-3. Build the elastic-agent docker( You might need to increase docker engine resources on your docker-engine)
+3. Build & deploy the elastic-agent docker( You might need to increase docker engine resources on your docker-engine)
 ```
-$ DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package # It takes a while on the first execution.
+$ just build-deploy-agent # It takes a while on the first execution.
 ```
-4. One build is finished, Verify the image is present on your machine
+4. Once command is finished, Verify the agent is running on your machine
+
+```zsh
+$ kubectl get po --selector="app=elastic-agent" --all-namespaces -o wide
+
+NAMESPACE     NAME                  READY   STATUS    RESTARTS   AGE    IP           NODE                      NOMINATED NODE   READINESS GATES
+kube-system   elastic-agent-9fpdz   1/1     Running   0          5h8m   172.20.0.2   kind-mono-control-plane   <none>           <none>
+
 
 ```
-$ docker image ls | grep elastic-agent                                                                                                                          10076
-docker.elastic.co/beats/elastic-agent-complete   8.1.0-SNAPSHOT           b73bbbc00e04   6 hours ago    1.6GB
-docker.elastic.co/beats-ci/elastic-agent-cloud   8.1.0-SNAPSHOT           66f9b9d41737   6 hours ago    878MB
-docker.elastic.co/beats/elastic-agent            8.1.0-SNAPSHOT           f089c673b70b   7 hours ago    554MB
-docker.elastic.co/beats/elastic-agent-ubi8       8.1.0-SNAPSHOT           7140d1b7bc0e   7 hours ago    324MB
-docker.elastic.co/beats/elastic-agent-complete   <none>                   182ee0acd1c0   2 weeks ago    1.64GB
-docker.elastic.co/beats/elastic-agent            <none>                   e0ecbfa4a14e   2 weeks ago    595MB
-docker.elastic.co/beats/elastic-agent-complete   8.0.0-SNAPSHOT           f081a7fcdc96   2 weeks ago    1.64GB
-docker.elastic.co/beats/elastic-agent            <none>                   47584f609ed0   3 weeks ago    583MB
-docker.elastic.co/beats/elastic-agent            <none>                   a7636fffbf82   4 weeks ago    580MB
-docker.elastic.co/beats/elastic-agent-complete   7.15.1                   a0a9dfa8e527   6 weeks ago    1.61GB
-```
 
+Note: Check the jusfile for all available commands for build or deploy `$ just --summary`
 </br>
 
-**2. Deploy on Minikube:** 
-1. Navigate to the kubebeat directory
-```
-$ cd beats/kubebeat 
-```
-2. Make a local copy of the yaml(it's set in gitignore) & insert your ES details(host,user,pass) 
-```
-$ cp  kubebeat/deploy/k8s/k8sbeat-agent-standalone-ds.yaml kubebeat/deploy/k8s/k8sbeat-agent-standalone-ds-local.yaml 
-```
-3. Load locally built image to minikube
-```
-$ minikube image load docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
-```
-4. Deploy elastic-agent on minikube under kube-system namespace as a daemon set
-```
-$ kubectl apply -f kubebeat/deploy/k8s/k8sbeat-agent-standalone-ds-local.yaml 
-```
-5.  Validate agent pod is in running state
-```
-$ kubectl get po --selector="app=elastic-agent" -n kube-system 
-```
-6. Get log output from elastic-agent pod
-```
-$ kubectl logs -f  --selector="app=elastic-agent" -n kube-system 
-```

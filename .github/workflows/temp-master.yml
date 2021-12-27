@@ -14,7 +14,7 @@ env:
   AGENT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent:${{ github.sha }}
   AWS_ECR_KEY: ${{ secrets.AWS_ECR_KEY_DEVELOP }}
   AWS_ECR_SECRET: ${{ secrets.AWS_ECR_SECRET_DEVELOP }}
-  AWS_ECR_REGION: ${{ AWS_ECR_REGION_DEVELOP }}
+  AWS_ECR_REGION: ${{ secrets.AWS_ECR_REGION_DEVELOP }}
   DEV: true
   SNAPSHOT: true
   PLATFORMS: linux/amd64

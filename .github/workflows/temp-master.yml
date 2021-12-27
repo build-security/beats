@@ -47,8 +47,8 @@ jobs:
             make mage
 
       - name: Build Opabeat Bin
+        working-directory: ./kubebeat
         run: |
-            cd kubebeat
             GOOS=linux go build -v && docker build -t opabeat .
 
       - name: Build and push OPABEAT
@@ -106,8 +106,8 @@ jobs:
             make mage
 
       - name: Package Elastic-Agent
+        working-directory: ./x-pack/elastic-agent
         run: |
-            cd xpack/elastic-agent
             DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
 
       - name: Push to ECR

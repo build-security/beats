@@ -23,20 +23,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-
-      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 
+      - name: add rego repo ssh key
+        uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 
         with:
           ssh-private-key: |
                 ${{ secrets.REGO_LIB_KEY }}
           repo-mappings: |
             github.com/elastic/csp-security-policies
 
-      - name: Checkout submodules
-        uses: srt32/git-actions@v0.0.3
+      - name: Check out the repo
+        uses: actions/checkout@v2
         with:
-          args: git submodule update --init --recursive
+          submodules: recursive
+
+      # - name: Checkout submodules
+      #   uses: srt32/git-actions@v0.0.3
+      #   with:
+      #     args: git submodule update --init --recursive
 
       - name: Set up Docker Buildx
         id: buildx

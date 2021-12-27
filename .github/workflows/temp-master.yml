@@ -74,7 +74,7 @@ jobs:
         uses: jwalton/gh-ecr-push@v1
         with:
           access-key-id: ${{ env.AWS_ECR_KEY }}
-          secret-access-key: ${{ AWS_ECR_SECRET }}
+          secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: opabeat:latest
           image: ${{ env.OPABEAT_IMAGE_BASE }}, ${{ env.OPABEAT_IMAGE}}:csp-latest
@@ -97,7 +97,7 @@ jobs:
   publish_image_agent:
     name: Push Elastic-Agent Docker image to ECR
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: add rego repo ssh key
         uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 
@@ -142,7 +142,7 @@ jobs:
         uses: jwalton/gh-ecr-push@v1
         with:
           access-key-id: ${{ env.AWS_ECR_KEY }}
-          secret-access-key: ${{ AWS_ECR_SECRET }}
+          secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
           image: ${{ env.AGENT_IMAGE_BASE }}, ${{ env.AGENT_IMAGE}}:csp-latest

@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Set up Docker Buildx
         id: buildx
@@ -35,9 +37,9 @@ jobs:
         with:
           go-version: 1.17.2
 
-      - name: Setup Mage Action
-        uses: nickhstr/action-setup-mage@v1.0.0
-        version: 1.11.0
+      - name: Setup Mage
+        run: |
+            make mage
         
       - name: Build Opabeat Bin
         run: |
@@ -77,6 +79,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Login to ECR
         uses: docker/login-action@v1
@@ -90,13 +94,13 @@ jobs:
         with:
           go-version: 1.17.2
 
-      - name: Setup Mage Action
-        uses: nickhstr/action-setup-mage@v1.0.0
-        version: 1.11.0
+      - name: Setup Mage
+        run: |
+            make mage
 
       - name: Package Elastic-Agent
         run: |
-            cd xpack/elastic-agent
+            cd x-pack/elastic-agent
             DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
 
       # - name: Notify job failure

@@ -104,7 +104,8 @@ jobs:
 
       - name: Setup Mage Action
         uses: nickhstr/action-setup-mage@v1.0.0
-        version: 1.11.0
+        with:
+          version: 1.11.0
 
       - name: Package Elastic-Agent
         run: |

@@ -1,3 +1,4 @@
+# Todo delete before merge to elastic/beats
 name: Publish Opabeat & Elastic-Agent images from csp master
 
 on:

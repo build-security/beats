@@ -55,6 +55,11 @@ jobs:
         run: |
             make mage
 
+      - name: Unit Test Opabeat
+        working-directory: ./kubebeat
+        run: |
+            GOOS=linux go test
+
       - name: Build Opabeat Bin
         working-directory: ./kubebeat
         run: |

@@ -76,7 +76,7 @@ jobs:
   build_elastic_agent:
     name: Elastic-Agent CI
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: add rego repo ssh key
         uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo. 

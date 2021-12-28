@@ -94,7 +94,7 @@ jobs:
   publish_image_agent:
     name: Push Elastic-Agent Docker image to ECR
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: add rego repo ssh key
         uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo.

@@ -55,15 +55,15 @@ jobs:
         run: |
             make mage
 
-      - name: Unit Test Opabeat
-        working-directory: ./kubebeat
-        run: |
-            GOOS=linux go test
-
       - name: Build Opabeat Bin
         working-directory: ./kubebeat
         run: |
             GOOS=linux go build -v && docker build -t opabeat .
+
+      - name: Unit Test Opabeat
+        working-directory: ./kubebeat
+        run: |
+            GOOS=linux go test
 
       - name: Push to ECR
         id: ecr

@@ -1,3 +1,4 @@
+# Todo delete before merge to elastic/beats
 --- kubebeat.yml	2021-11-15 18:48:10.000000000 +0200
 +++ kubebeat_new.yml	2021-11-15 18:52:13.000000000 +0200
 @@ -4,7 +4,7 @@

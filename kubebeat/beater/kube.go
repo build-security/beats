@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	KubeAPIInputType = "kube-api"
+
 	kubeSystemNamespace = "kube-system"
 	allNamespaces       = "" // The Kube API treats this as "all namespaces"
 )
@@ -21,37 +23,44 @@ var (
 	// Kubernetes cluster.
 	vanillaClusterResources = []requiredResource{
 		{
+			"pods",
 			&kubernetes.Pod{},
 			kubeSystemNamespace,
 		},
 		{
-
+			"secrets",
 			&kubernetes.Secret{},
 			allNamespaces,
 		},
 		{
+			"roles",
 			&kubernetes.Role{},
 			allNamespaces,
 		},
 		{
+			"role_bindings",
 			&kubernetes.RoleBinding{},
 			allNamespaces,
 		},
 		{
+			"cluster_roles",
 			&kubernetes.ClusterRole{},
 			allNamespaces,
 		},
 		{
+			"cluster_role_bindings",
 			&kubernetes.ClusterRoleBinding{},
 			allNamespaces,
 		},
 		{
+			"pod_security_policies",
 			&kubernetes.PodSecurityPolicy{},
 			allNamespaces,
 		},
 		// TODO(yashtewari): Problem: github.com/elastic/beats/vendor/k8s.io/apimachinery/pkg/api/errors/errors.go#401
 		// > "the server could not find the requested resource"
 		// {
+		//	"network_policies",
 		// 	&kubernetes.NetworkPolicy{},
 		// 	allNamespaces,
 		// },
@@ -59,21 +68,27 @@ var (
 )
 
 type requiredResource struct {
+	key       string
 	resource  kubernetes.Resource
 	namespace string
+}
+
+type KubeAPI struct {
+	Type     string                   `json:"type"`
+	Resource map[string][]interface{} `json:"resource"`
 }
 
 type KubeFetcher struct {
 	kubeconfig string
 	interval   time.Duration
-	watchers   []kubernetes.Watcher
+	watchers   map[string]kubernetes.Watcher
 }
 
 func NewKubeFetcher(kubeconfig string, interval time.Duration) (Fetcher, error) {
 	f := &KubeFetcher{
 		kubeconfig: kubeconfig,
 		interval:   interval,
-		watchers:   make([]kubernetes.Watcher, 0),
+		watchers:   make(map[string]kubernetes.Watcher),
 	}
 
 	if err := f.initWatchers(); err != nil {
@@ -103,7 +118,7 @@ func (f *KubeFetcher) initWatcher(client k8s.Interface, r requiredResource) erro
 		return fmt.Errorf("could not start watcher: %w", err)
 	}
 
-	f.watchers = append(f.watchers, w)
+	f.watchers[r.key] = w
 
 	return nil
 }
@@ -116,7 +131,7 @@ func (f *KubeFetcher) initWatchers() error {
 
 	logp.Info("Kubernetes client initiated.")
 
-	f.watchers = make([]kubernetes.Watcher, 0)
+	f.watchers = make(map[string]kubernetes.Watcher)
 
 	for _, r := range vanillaClusterResources {
 		err := f.initWatcher(client, r)
@@ -131,9 +146,12 @@ func (f *KubeFetcher) initWatchers() error {
 }
 
 func (f *KubeFetcher) Fetch() ([]interface{}, error) {
-	ret := make([]interface{}, 0)
+	ka := KubeAPI{
+		Type:     KubeAPIInputType,
+		Resource: make(map[string][]interface{}),
+	}
 
-	for _, w := range f.watchers {
+	for key, w := range f.watchers {
 		resources := w.Store().List()
 
 		for _, r := range resources {
@@ -147,10 +165,10 @@ func (f *KubeFetcher) Fetch() ([]interface{}, error) {
 			addTypeInformationToObject(o) // See https://github.com/kubernetes/kubernetes/issues/3030
 		}
 
-		ret = append(ret, resources...)
+		ka.Resource[key] = resources
 	}
 
-	return ret, nil
+	return []interface{}{ka}, nil
 }
 
 func (f *KubeFetcher) Stop() {

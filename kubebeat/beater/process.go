@@ -10,10 +10,10 @@ const (
 )
 
 type Process struct {
-	InputType string        `json:"type"`
-	PID       string        `json:"pid"`
-	Cmd       string        `json:"command"`
-	Stat      proc.ProcStat `json:"stat"`
+	Type string        `json:"type"`
+	PID  string        `json:"pid"`
+	Cmd  string        `json:"command"`
+	Stat proc.ProcStat `json:"stat"`
 }
 
 type ProcessesFetcher struct {

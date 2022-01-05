@@ -1,8 +1,11 @@
 package beater
 
 import (
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
+	"encoding/json"
+	"strings"
 	"time"
+
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 
 	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -40,13 +43,27 @@ func (parser *evaluationResultParser) ParseResult(index, result interface{}, uui
 				"rule":     finding.Rule,
 			},
 		}
+
+		// This event can't be indexed by Elasticsearch until
+		// fields containing only a dot are removed or modified.
+		j, err := json.Marshal(event)
+		if err != nil {
+			return nil, err
+		}
+		js := string(j)
+		js = strings.ReplaceAll(js, "\".\"", "\"DOT\"")
+
+		var e beat.Event
+		json.Unmarshal([]byte(js), &e)
+
 		// Insert datastream as index to event struct
-	if index != "" {
+		if index != "" {
 
-		event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
-	}
+			event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
+			e.Meta = common.MapStr{libevents.FieldMetaIndex: index}
+		}
 
-		events = append(events, event)
+		events = append(events, e)
 	}
 
 	return events, err

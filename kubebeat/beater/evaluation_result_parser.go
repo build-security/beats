@@ -19,7 +19,7 @@ func NewEvaluationResultParser() (*evaluationResultParser, error) {
 	return &evaluationResultParser{}, nil
 }
 
-func (parser *evaluationResultParser) ParseResult(index, result interface{}, uuid uuid.UUID, timestamp time.Time) ([]beat.Event, error) {
+func (parser *evaluationResultParser) ParseResult(index, result interface{}, cycleId uuid.UUID, timestamp time.Time) ([]beat.Event, error) {
 
 	events := make([]beat.Event, 0)
 	var opaResultMap = result.(map[string]interface{})
@@ -34,17 +34,17 @@ func (parser *evaluationResultParser) ParseResult(index, result interface{}, uui
 		event := beat.Event{
 			Timestamp: timestamp,
 			Fields: common.MapStr{
-				"run_id":   uuid,
+				"cycle_id": cycleId,
 				"result":   finding.Result,
 				"resource": opaResult.Resource,
 				"rule":     finding.Rule,
 			},
 		}
 		// Insert datastream as index to event struct
-	if index != "" {
+		if index != "" {
 
-		event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
-	}
+			event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
+		}
 
 		events = append(events, event)
 	}

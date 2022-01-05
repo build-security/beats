@@ -12,12 +12,12 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 
 	var result map[string]interface{}
 	json.Unmarshal([]byte(jsonExample), &result)
-	runId, _ := uuid.NewV4()
+	cycleId, _ := uuid.NewV4()
 	timestamp := time.Now()
 	//Creating a new evaluation parser
 	parser, _ := NewEvaluationResultParser()
 
-	parsedResult, err := parser.ParseResult(result, runId, timestamp)
+	parsedResult, err := parser.ParseResult(result, cycleId, timestamp)
 	if err != nil {
 		assert.Fail(t, "error during parsing of the json", err)
 	}
@@ -25,10 +25,10 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 	for _, event := range parsedResult {
 
 		assert.Equal(t, timestamp, event.Timestamp, `event timestamp is not correct`)
-		assert.Equal(t, runId, event.Fields["run_id"], "event run_id is not correct")
+		assert.Equal(t, cycleId, event.Fields["cycle_id"], "event cycle_id is not correct")
 		assert.NotEmpty(t, event.Fields["result"], "event result is missing")
-		assert.NotEmpty(t, runId, event.Fields["rule"], "event rule is missing")
-		assert.NotEmpty(t, runId, event.Fields["resource"], "event resource is missing")
+		assert.NotEmpty(t, cycleId, event.Fields["rule"], "event rule is missing")
+		assert.NotEmpty(t, cycleId, event.Fields["resource"], "event resource is missing")
 	}
 }
 

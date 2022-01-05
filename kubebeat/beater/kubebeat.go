@@ -89,21 +89,23 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			return nil
 		case o := <-output:
 			timestamp := time.Now()
-			runId, _ := uuid.NewV4()
+			cycleId, _ := uuid.NewV4()
 
 			resourceCallback := func(resource interface{}) {
 				// ns will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
 				ns := ""
-				bt.resourceIteration(config.Datastream(ns), resource, runId, timestamp)
+				bt.resourceIteration(config.Datastream(ns), resource, cycleId, timestamp)
 			}
 
+			// update hidden-index that beat cycle has started
 			bt.scheduler.ScheduleResources(o, resourceCallback)
+			// update hidden-index that beat cycle has ended
 		}
 	}
 }
 
 // Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
-func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UUID, timestamp time.Time) {
+func (bt *kubebeat) resourceIteration(index, resource interface{}, cycleId uuid.UUID, timestamp time.Time) {
 
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
@@ -111,7 +113,7 @@ func (bt *kubebeat) resourceIteration(index, resource interface{}, runId uuid.UU
 		return
 	}
 	//Todo index added to Parse result since currently that's where event fields are appended - Should later be split on some critiria(stream,fetcher or datasource) with an util function to handle the ds provision
-	events, err := bt.resultParser.ParseResult(index, result, runId, timestamp)
+	events, err := bt.resultParser.ParseResult(index, result, cycleId, timestamp)
 
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

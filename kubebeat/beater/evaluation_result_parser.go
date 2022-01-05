@@ -42,7 +42,6 @@ func (parser *evaluationResultParser) ParseResult(index, result interface{}, cyc
 		}
 		// Insert datastream as index to event struct
 		if index != "" {
-
 			event.Meta = common.MapStr{libevents.FieldMetaIndex: index}
 		}
 

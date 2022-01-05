@@ -93,8 +93,8 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 
 			resourceCallback := func(resource interface{}) {
 				// ns will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
-				ns := ""
-				bt.resourceIteration(config.Datastream(ns), resource, cycleId, timestamp)
+				nameSpace := ""
+				bt.resourceIteration(config.Datastream(nameSpace), resource, cycleId, timestamp)
 			}
 
 			// update hidden-index that beat cycle has started

@@ -17,7 +17,7 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 	//Creating a new evaluation parser
 	parser, _ := NewEvaluationResultParser()
 
-	parsedResult, err := parser.ParseResult(result, cycleId, timestamp)
+	parsedResult, err := parser.ParseResult("", result, cycleId, timestamp)
 	if err != nil {
 		assert.Fail(t, "error during parsing of the json", err)
 	}

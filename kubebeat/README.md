@@ -14,7 +14,7 @@ The interesting files are:
 - [POC Documentation](#poc-documentation)
   - [Table of contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
-  - [Running the Kubebeat](#running-the-kubebeat)
+  - [Running Kubebeat](#running-kubebeat-without-the-agent)
     - [Clean up](#clean-up)
     - [Remote Debugging](#remote-debugging)
 - [{Beat}](#beat)
@@ -42,25 +42,20 @@ The interesting files are:
 
 5. Clone the git submodule of the CIS rules:
 ```
-    $ git submodule update --init
-```
-6. Comment the Rego code that uses data.yaml (Temporary fix) - go to compliance/cis_k8s/cis_k8s.rego and comment the following line of code:
-
-```yml
-    data.activated_rules.cis_k8s[rule_id]
+$ git submodule update --init
 ```
 
-8. Install just
-    ```zsh
-    $ brew install just
-   ```
-
-9. Setup the local env:
+6. Install just
 ```zsh
-   $ cd kubebeat & just setup-local-env
+$ brew install just
 ```
 
-## Running Kubebeat(without the agent)
+7. Setup the local env:
+```zsh
+$ cd kubebeat & just setup-local-env
+```
+
+## Running Kubebeat (without the agent)
 
 Build & deploy kubebeat:
 
@@ -156,7 +151,6 @@ To run {Beat} with debugging output enabled, run:
 ```
 ./kubebeat -c kubebeat.yml -e -d "*"
 ```
-
 
 ### Test
 

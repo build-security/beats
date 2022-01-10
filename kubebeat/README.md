@@ -39,7 +39,7 @@ The interesting files are:
 4. Setup the local env:
 
 ```zsh
-cd kubebeat & just setup-local-env
+cd kubebeat & just setup-env
 ```
 
 5. Clone the git submodule of the CIS rules:

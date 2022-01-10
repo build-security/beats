@@ -39,7 +39,7 @@ The interesting files are:
 4. kind k8s cluster running locally
 
 ```zsh
-just create-kind-cluster
+just setup-env
 ```
 
 5. Clone the git submodule of the CIS rules:

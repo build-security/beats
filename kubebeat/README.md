@@ -36,22 +36,16 @@ The interesting files are:
 1. [Just command runner](https://github.com/casey/just)
 2. Elasticsearch with the default username & password (`elastic` & `changeme`) running on the default port (`http://localhost:9200`)
 3. Kibana with running on the default port (`http://localhost:5601`)
-4. kind k8s cluster running locally
+4. Setup the local env:
 
 ```zsh
-just setup-env
+cd kubebeat & just setup-local-env
 ```
 
 5. Clone the git submodule of the CIS rules:
 
 ```zsh
 git submodule update --init
-```
-
-6. Setup the local env:
-
-```zsh
-cd kubebeat & just setup-local-env
 ```
 
 ## Running Kubebeat (without the agent)

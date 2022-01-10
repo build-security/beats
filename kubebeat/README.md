@@ -33,26 +33,25 @@ The interesting files are:
 
 ## Prerequisites
 **Please make sure that you run the following instructions within the `kubebeat` directory.**
+1. [Just command runner](https://github.com/casey/just)
+2. Elasticsearch with the default username & password (`elastic` & `changeme`) running on the default port (`http://localhost:9200`)
+3. Kibana with running on the default port (`http://localhost:5601`)
+4. kind k8s cluster running locally
 
-1. Elasticsearch with the default username & password (`elastic` & `changeme`) running on the default port (`http://localhost:9200`)
-2. Kibana with running on the default port (`http://localhost:5601`)
-3. kind k8s cluster running locally
-4. [Just command runner](https://github.com/casey/just)
-
-
-5. Clone the git submodule of the CIS rules:
-```
-$ git submodule update --init
-```
-
-6. Install just
 ```zsh
-$ brew install just
+just create-kind-cluster
+```
+
+4. Clone the git submodule of the CIS rules:
+
+```zsh
+git submodule update --init
 ```
 
 7. Setup the local env:
+
 ```zsh
-$ cd kubebeat & just setup-local-env
+cd kubebeat & just setup-local-env
 ```
 
 ## Running Kubebeat (without the agent)
@@ -60,13 +59,13 @@ $ cd kubebeat & just setup-local-env
 Build & deploy kubebeat:
 
 ```zsh
-$ just build-deploy-kubebeat
+just build-deploy-kubebeat
 ```
 
 To validate check the logs:
 
 ```zsh
-$ kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
+kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
 ```
 
 Now go and check out the data on your Kibana! Make sure to add a kibana dataview `logs-k8s_cis.result-*`
@@ -77,27 +76,27 @@ note: when changing the fields kibana will reject events dent from the kubebeat 
 
 To stop this example and clean up the pod, run:
 ```zsh
-$ kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
+kubectl delete -f deploy/k8s/kubebeat-ds-local.yaml -n kube-system
 ```
 ### Remote Debugging
 
 Build & Deploy remote debug docker:
 
 ```zsh
-$ just build-deploy-kubebeat-debug
+just build-deploy-kubebeat-debug
 ```
 
 After running the pod, expose the relevant ports:
 ```zsh
-$ kubectl port-forward ${pod-name} 40000:40000 8080:8080
+kubectl port-forward ${pod-name} 40000:40000 8080:8080
 ```
 
 The app will wait for the debugger to connect before starting
 
 ```zsh
-$ kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
+kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
 
-    API server listening at: [::]:40000
+API server listening at: [::]:40000
 ```
 
 Use your favorite IDE to connect to the debugger on `localhost:40000` (for example [Goland](https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-3-create-the-remote-run-debug-configuration-on-the-client-computer))

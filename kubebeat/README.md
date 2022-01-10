@@ -42,13 +42,13 @@ The interesting files are:
 just create-kind-cluster
 ```
 
-4. Clone the git submodule of the CIS rules:
+5. Clone the git submodule of the CIS rules:
 
 ```zsh
 git submodule update --init
 ```
 
-7. Setup the local env:
+6. Setup the local env:
 
 ```zsh
 cd kubebeat & just setup-local-env

@@ -59,7 +59,7 @@ just build-deploy-kubebeat
 To validate check the logs:
 
 ```zsh
-kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
+kubectl logs -f --selector="k8s-app=kubebeat"  -n kube-system
 ```
 
 Now go and check out the data on your Kibana! Make sure to add a kibana dataview `logs-k8s_cis.result-*`

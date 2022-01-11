@@ -100,7 +100,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			bt.scheduler.ScheduleResources(o, resourceCallback)
 
 			// update hidden-index that the beat's cycle has ended
-			bt.UpdateCycleStatus(cycleId)
+			bt.updateCycleStatus(cycleId)
 		}
 	}
 }
@@ -130,8 +130,8 @@ func (bt *kubebeat) Stop() {
 	close(bt.done)
 }
 
-// UpdateCycleStatus updates beat status in metadata ES index.
-func (bt *kubebeat) UpdateCycleStatus(cycleId uuid.UUID) {
+// updateCycleStatus updates beat status in metadata ES index.
+func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID) {
 	metadataIndex := config.Datastream("", config.MetadataDatastreamIndexPrefix)
 	cycleEndedEvent := beat.Event{
 		Timestamp: time.Now(),

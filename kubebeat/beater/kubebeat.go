@@ -3,6 +3,7 @@ package beater
 import (
 	"context"
 	"fmt"
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
@@ -92,19 +93,19 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			cycleId, _ := uuid.NewV4()
 
 			resourceCallback := func(resource interface{}) {
-				// ns will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
-				nameSpace := ""
-				bt.resourceIteration(config.Datastream(nameSpace), resource, cycleId, timestamp)
+				// namespace will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
+				resultsIndex := config.Datastream("", config.ResultsDatastreamIndexPrefix)
+				bt.resourceIteration(resultsIndex, resource, cycleId, timestamp)
 			}
 
-			// update hidden-index that beat cycle has started
 			bt.scheduler.ScheduleResources(o, resourceCallback)
-			// update hidden-index that beat cycle has ended
+
+			// update hidden-index that the beat's cycle has ended
+			bt.UpdateCycleStatus(cycleId)
 		}
 	}
 }
 
-// Todo - index param implemented as part of resource iteration will be added to code polishing to have proper infra
 func (bt *kubebeat) resourceIteration(index, resource interface{}, cycleId uuid.UUID, timestamp time.Time) {
 
 	result, err := bt.eval.Decision(resource)
@@ -112,7 +113,6 @@ func (bt *kubebeat) resourceIteration(index, resource interface{}, cycleId uuid.
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return
 	}
-	//Todo index added to Parse result since currently that's where event fields are appended - Should later be split on some critiria(stream,fetcher or datasource) with an util function to handle the ds provision
 	events, err := bt.resultParser.ParseResult(index, result, cycleId, timestamp)
 
 	if err != nil {
@@ -129,4 +129,18 @@ func (bt *kubebeat) Stop() {
 	bt.eval.Stop()
 
 	close(bt.done)
+}
+
+// UpdateCycleStatus updates beat status in metadata ES index.
+func (bt *kubebeat) UpdateCycleStatus(cycleId uuid.UUID) {
+	metadataIndex := config.Datastream("", config.MetadataDatastreamIndexPrefix)
+	cycleEndedEvent := beat.Event{
+		Timestamp: time.Now(),
+		Meta:      common.MapStr{libevents.FieldMetaIndex: metadataIndex},
+		Fields: common.MapStr{
+			"cycle_id": cycleId,
+			"status":   "ended",
+		},
+	}
+	bt.client.Publish(cycleEndedEvent)
 }

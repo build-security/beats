@@ -81,7 +81,6 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		return err
 	}
 
-	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()
 
 	for {

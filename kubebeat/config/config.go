@@ -9,7 +9,7 @@ import "time"
 const DefaultNamespace = "default"
 
 const ResultsDatastreamIndexPrefix = "logs-k8s_cis.result"
-const MetadataDatastreamIndexPrefix = "logs-k8s_cis.metadata"
+const MetadataDatastreamIndexPrefix = ".logs-k8s_cis.metadata"
 
 type Config struct {
 	KubeConfig string        `config:"kube_config"`

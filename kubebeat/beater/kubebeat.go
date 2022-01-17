@@ -42,7 +42,9 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	eventParser, err := NewEvaluationResultParser()
+	// namespace will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
+	resultsIndex := config.Datastream("", config.ResultsDatastreamIndexPrefix)
+	eventParser, err := NewEvaluationResultParser(resultsIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +90,10 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		case <-bt.done:
 			return nil
 		case o := <-output:
-			timestamp := time.Now()
 			cycleId, _ := uuid.NewV4()
 
 			resourceCallback := func(resource interface{}) {
-				// namespace will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
-				resultsIndex := config.Datastream("", config.ResultsDatastreamIndexPrefix)
-				bt.resourceIteration(resultsIndex, resource, cycleId, timestamp)
+				bt.resourceIteration(resource, cycleId)
 			}
 
 			bt.scheduler.ScheduleResources(o, resourceCallback)
@@ -105,14 +104,13 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 }
 
-func (bt *kubebeat) resourceIteration(index, resource interface{}, cycleId uuid.UUID, timestamp time.Time) {
-
+func (bt *kubebeat) resourceIteration(resource interface{}, cycleId uuid.UUID) {
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return
 	}
-	events, err := bt.resultParser.ParseResult(index, result, cycleId, timestamp)
+	events, err := bt.resultParser.ParseResult(result, cycleId)
 
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))

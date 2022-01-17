@@ -2,6 +2,7 @@ package beater
 
 import (
 	"encoding/json"
+	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -9,21 +10,20 @@ import (
 )
 
 func TestEvaluationResultParserParseResult(t *testing.T) {
-
 	var result map[string]interface{}
 	json.Unmarshal([]byte(jsonExample), &result)
 	cycleId, _ := uuid.NewV4()
 	timestamp := time.Now()
+	index := config.Datastream("", config.ResultsDatastreamIndexPrefix)
 	//Creating a new evaluation parser
-	parser, _ := NewEvaluationResultParser()
+	parser, _ := NewEvaluationResultParser(index)
 
-	parsedResult, err := parser.ParseResult("", result, cycleId, timestamp)
+	parsedResult, err := parser.ParseResult(result, cycleId)
 	if err != nil {
 		assert.Fail(t, "error during parsing of the json", err)
 	}
 
 	for _, event := range parsedResult {
-
 		assert.Equal(t, timestamp, event.Timestamp, `event timestamp is not correct`)
 		assert.Equal(t, cycleId, event.Fields["cycle_id"], "event cycle_id is not correct")
 		assert.NotEmpty(t, event.Fields["result"], "event result is missing")

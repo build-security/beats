@@ -101,7 +101,6 @@ pipeline {
                   'auditbeat',
                   'filebeat',
                   'heartbeat',
-                  'journalbeat',
                   'metricbeat',
                   'packetbeat',
                   'winlogbeat',
@@ -111,7 +110,6 @@ pipeline {
                   'x-pack/filebeat',
                   'x-pack/functionbeat',
                    'x-pack/heartbeat',
-                  // 'x-pack/journalbeat',
                   'x-pack/metricbeat',
                   'x-pack/osquerybeat',
                   'x-pack/packetbeat',
@@ -199,7 +197,6 @@ pipeline {
                   'auditbeat',
                   'filebeat',
                   'heartbeat',
-                  'journalbeat',
                   'metricbeat',
                   'packetbeat',
                   'x-pack/auditbeat',
@@ -246,8 +243,7 @@ pipeline {
           agent { label 'ubuntu-18 && immutable' }
           options { skipDefaultCheckout() }
           steps {
-            log(level: 'WARN', text: "E2E Tests for Beats are disabled until latest breaking changes in Kibana affecting Package Registry are resolved.")
-            //runE2ETests()
+            runE2ETests()
           }
         }
       }
@@ -278,8 +274,6 @@ def pushCIDockerImages(Map args = [:]) {
       tagAndPush(beatName: 'filebeat', arch: arch)
     } else if (env?.BEATS_FOLDER?.endsWith('heartbeat')) {
       tagAndPush(beatName: 'heartbeat', arch: arch)
-    } else if ("${env.BEATS_FOLDER}" == "journalbeat"){
-      tagAndPush(beatName: 'journalbeat', arch: arch)
     } else if (env?.BEATS_FOLDER?.endsWith('metricbeat')) {
       tagAndPush(beatName: 'metricbeat', arch: arch)
     } else if (env?.BEATS_FOLDER?.endsWith('osquerybeat')) {

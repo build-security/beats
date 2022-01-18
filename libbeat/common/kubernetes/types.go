@@ -82,8 +82,23 @@ type Secret = v1.Secret
 // Job data
 type Job = batchv1.Job
 
-// CronJob data
-type CronJob = batchv1.CronJob
+// Role data
+type Role = rbacv1.Role
+
+// RoleBinding data
+type RoleBinding = rbacv1.RoleBinding
+
+// ClusterRole data
+type ClusterRole = rbacv1.ClusterRole
+
+// ClusterRoleBinding data
+type ClusterRoleBinding = rbacv1.ClusterRoleBinding
+
+// PodSecurityPolicy data
+type PodSecurityPolicy = policyv1beta1.PodSecurityPolicy
+
+// NetworkPolicy data
+type NetworkPolicy = networkingv1.NetworkPolicy
 
 // Role data
 type Role = rbacv1.Role

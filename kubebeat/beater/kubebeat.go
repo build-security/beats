@@ -24,6 +24,12 @@ type kubebeat struct {
 	scheduler    ResourceScheduler
 }
 
+const (
+	cycleStatusStart = "start"
+	cycleStatusEnd   = "end"
+	cycleStatusFail  = "fail"
+)
+
 // New creates an instance of kubebeat.
 func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	ctx := context.Background()
@@ -91,6 +97,8 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			return nil
 		case o := <-output:
 			cycleId, _ := uuid.NewV4()
+			// update hidden-index that the beat's cycle has started
+			bt.updateCycleStatus(cycleId, cycleStatusStart)
 
 			resourceCallback := func(resource interface{}) {
 				bt.resourceIteration(resource, cycleId)
@@ -99,7 +107,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			bt.scheduler.ScheduleResources(o, resourceCallback)
 
 			// update hidden-index that the beat's cycle has ended
-			bt.updateCycleStatus(cycleId)
+			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}
 	}
 }
@@ -129,14 +137,14 @@ func (bt *kubebeat) Stop() {
 }
 
 // updateCycleStatus updates beat status in metadata ES index.
-func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID) {
+func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID, status string) {
 	metadataIndex := config.Datastream("", config.MetadataDatastreamIndexPrefix)
 	cycleEndedEvent := beat.Event{
 		Timestamp: time.Now(),
 		Meta:      common.MapStr{libevents.FieldMetaIndex: metadataIndex},
 		Fields: common.MapStr{
 			"cycle_id": cycleId,
-			"status":   "ended",
+			"status":   status,
 		},
 	}
 	bt.client.Publish(cycleEndedEvent)

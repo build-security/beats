@@ -82,13 +82,13 @@ just build-deploy-kubebeat-debug
 
 After running the pod, expose the relevant ports:
 ```zsh
-kubectl port-forward ${pod-name} 40000:40000 8080:8080
+kubectl port-forward ${pod-name} -n kube-system 40000:40000 8080:8080
 ```
 
 The app will wait for the debugger to connect before starting
 
 ```zsh
-kubectl logs -f --selector="k8s-app=elastic-kubebeat"  -n kube-system
+kubectl logs -f --selector="k8s-app=kubebeat" -n kube-system
 
 API server listening at: [::]:40000
 ```

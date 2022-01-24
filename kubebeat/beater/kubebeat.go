@@ -3,25 +3,27 @@ package beater
 import (
 	"context"
 	"fmt"
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
+	"github.com/elastic/beats/v7/libbeat/processors"
 	"github.com/gofrs/uuid"
 )
 
 // kubebeat configuration.
 type kubebeat struct {
-	done         chan struct{}
-	config       config.Config
-	client       beat.Client
-	eval         *evaluator
-	data         *Data
-	resultParser *evaluationResultParser
-	scheduler    ResourceScheduler
+	done          chan struct{}
+	config        config.Config
+	client        beat.Client
+	eval          *evaluator
+	data          *Data
+	resultParser  *evaluationResultParser
+	scheduler     ResourceScheduler
+	clusterHelper *ClusterHelper
 }
 
 const (
@@ -60,17 +62,24 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	data.RegisterFetcher("kube_api", kubef)
-	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir))
-	data.RegisterFetcher("file_system", NewFileFetcher(c.Files))
+	if err := data.RegisterFetcher("kube_api", kubef); err != nil {
+		return nil, err
+	}
+	if err := data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir)); err != nil {
+		return nil, err
+	}
+	if err := data.RegisterFetcher("file_system", NewFileFetcher(c.Files)); err != nil {
+		return nil, err
+	}
 
 	bt := &kubebeat{
-		done:         make(chan struct{}),
-		config:       c,
-		eval:         evaluator,
-		data:         data,
-		resultParser: eventParser,
-		scheduler:    scheduler,
+		done:          make(chan struct{}),
+		config:        c,
+		eval:          evaluator,
+		data:          data,
+		resultParser:  eventParser,
+		scheduler:     scheduler,
+		clusterHelper: newClusterHelper(),
 	}
 	return bt, nil
 }
@@ -79,13 +88,22 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 func (bt *kubebeat) Run(b *beat.Beat) error {
 	logp.Info("kubebeat is running! Hit CTRL-C to stop it.")
 
-	err := bt.data.Run()
-	if err != nil {
+	if err := bt.data.Run(); err != nil {
 		return err
 	}
 	defer bt.data.Stop()
 
-	if bt.client, err = b.Publisher.Connect(); err != nil {
+	procs, err := bt.configureProcessors()
+	if err != nil {
+		return err
+	}
+
+	// Connect publisher (with beat's processors)
+	if bt.client, err = b.Publisher.ConnectWith(beat.ClientConfig{
+		Processing: beat.ProcessingConfig{
+			Processor: procs,
+		},
+	}); err != nil {
 		return err
 	}
 
@@ -148,4 +166,17 @@ func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID, status string) {
 		},
 	}
 	bt.client.Publish(cycleEndedEvent)
+}
+
+// configureProcessors configure processors to be used by the beat
+func (bt *kubebeat) configureProcessors() (procs *processors.Processors, err error) {
+	processorConfig := []*common.Config{
+		common.MustNewConfigFrom(common.MapStr{
+			"add_fields": common.MapStr{
+				"fields": common.MapStr{
+					"cluster_id": bt.clusterHelper.ClusterId(),
+				},
+			},
+		})}
+	return processors.New(processorConfig)
 }

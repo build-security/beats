@@ -10,16 +10,26 @@ type ClusterHelper struct {
 	clusterId string
 }
 
-func newClusterHelper() *ClusterHelper {
-	return &ClusterHelper{clusterId: getClusterIdFromClient()}
+func newClusterHelper() (*ClusterHelper, error) {
+	clusterId, err := getClusterIdFromClient()
+	if err != nil {
+		return nil, err
+	}
+	return &ClusterHelper{clusterId: clusterId}, nil
 }
 
 func (c ClusterHelper) ClusterId() string {
 	return c.clusterId
 }
 
-func getClusterIdFromClient() string {
-	client, _ := kubernetes.GetKubernetesClient("", kubernetes.KubeClientOptions{})
-	n, _ := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
-	return string(n.ObjectMeta.UID)
+func getClusterIdFromClient() (string, error) {
+	client, err := kubernetes.GetKubernetesClient("", kubernetes.KubeClientOptions{})
+	if err != nil {
+		return "", err
+	}
+	n, err := client.CoreV1().Namespaces().Get(context.Background(), "kube-system", metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return string(n.ObjectMeta.UID), nil
 }

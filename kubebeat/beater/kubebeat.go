@@ -76,6 +76,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
+	clusterHelper, err := newClusterHelper()
+	if err != nil {
+		return nil, err
+	}
+
 	bt := &kubebeat{
 		done:          make(chan struct{}),
 		config:        c,
@@ -83,7 +88,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		data:          data,
 		resultParser:  eventParser,
 		scheduler:     scheduler,
-		clusterHelper: newClusterHelper(),
+		clusterHelper: clusterHelper,
 	}
 	return bt, nil
 }

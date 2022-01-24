@@ -66,9 +66,15 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	data.RegisterFetcher("kube_api", kubef, true)
-	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
-	data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
+	if err = data.RegisterFetcher("kube_api", kubef, true); err != nil {
+		return nil, err
+	}
+	if err = data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false); err != nil {
+		return nil, err
+	}
+	if err = data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false); err != nil {
+		return nil, err
+	}
 
 	bt := &kubebeat{
 		done:          make(chan struct{}),
@@ -171,6 +177,7 @@ func (bt *kubebeat) configureProcessors() (procs *processors.Processors, err err
 	processorConfig := []*common.Config{
 		common.MustNewConfigFrom(common.MapStr{
 			"add_fields": common.MapStr{
+				"target": "", // set field in root
 				"fields": common.MapStr{
 					"cluster_id": bt.clusterHelper.ClusterId(),
 				},

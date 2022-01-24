@@ -43,7 +43,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	logp.Info("Config initiated.")
 
-	data := NewData(ctx, c.Period)
+	data, err := NewData(ctx, c.Period)
+	if err != nil {
+		return nil, err
+	}
+
 	scheduler := NewSynchronousScheduler()
 	evaluator, err := NewEvaluator()
 	if err != nil {
@@ -62,15 +66,9 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	if err := data.RegisterFetcher("kube_api", kubef); err != nil {
-		return nil, err
-	}
-	if err := data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir)); err != nil {
-		return nil, err
-	}
-	if err := data.RegisterFetcher("file_system", NewFileFetcher(c.Files)); err != nil {
-		return nil, err
-	}
+	data.RegisterFetcher("kube_api", kubef, true)
+	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
+	data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
 
 	bt := &kubebeat{
 		done:          make(chan struct{}),

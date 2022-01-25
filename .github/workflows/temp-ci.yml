@@ -68,7 +68,7 @@ jobs:
       - name: Get diff k8s manifests
         uses: technote-space/get-diff-action@v4
         with:
-          PATTERNS: ${{ K8S_MANIFEST_DIR }}/**
+          PATTERNS: ${{ env.K8S_MANIFEST_DIR }}/**
 
       - name: Run K8s manifest tests
         if: env.GIT_DIFF
@@ -78,9 +78,9 @@ jobs:
           kubeval: v0.16.1
           command: |
             echo "Run kubeval"
-            kubeval --strict ${{ K8S_MANIFEST_DIR }}/kubebeat-ds.yaml
-          # kubeval --strict ${{ K8S_MANIFEST_DIR }}/standalone-agent.yaml
-          # kubeval --strict ${{ K8S_MANIFEST_DIR }}/fleet-managed-agent.yaml 
+            kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/kubebeat-ds.yaml
+          # kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/standalone-agent.yaml
+          # kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/fleet-managed-agent.yaml 
 # Todo Will transfer to parallel job & add conftest for other deploy yamls
       # - name: Notify job failure
       #   if: failure()

@@ -9,7 +9,8 @@ spec:
     - key: node-role.kubernetes.io/master
       effect: NoSchedule
   containers:
-    - image: kubebeat
+    - image: 704479110758.dkr.ecr.us-east-2.amazonaws.com/kubebeat@sha256:cd63903fa2ac2f716abf69520d3fdd33362d468219333441705230bdac120150
+    - image: 704479110758.dkr.ecr.us-east-2.amazonaws.com/kubebeat@sha256:cd63903fa2ac2f716abf69520d3fdd33362d468219333441705230bdac120150
       name: kubebeat-demo
       imagePullPolicy: Always
       volumeMounts:

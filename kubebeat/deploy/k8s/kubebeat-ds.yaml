@@ -22,13 +22,8 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: kubebeat
-        image: kubebeat
+        image: kubebeat:latest
         imagePullPolicy: IfNotPresent
-         args: [
-           "-e",
-           "-d",
-           "'*'"
-           ]
         env:
         - name: ES_HOSTS
           value: "host.docker.internal:9200"
@@ -51,16 +46,16 @@ spec:
           # If using Red Hat OpenShift uncomment this:
           #privileged: true
         resources:
-          limits:
-            memory: 500Mi
+          # limits:
+          #   memory: 200Mi
           requests:
             cpu: 100m
-            memory: 200Mi
+            memory: 100Mi
         volumeMounts:
-        - name: config
-          mountPath: /kubebeat.yml
-          readOnly: true
-          subPath: kubebeat.yml
+        # - name: config
+        #   mountPath: /kubebeat.yml
+          # readOnly: true
+          # subPath: kubebeat.yml
         - name: proc
           mountPath: /hostfs/proc
           readOnly: true
@@ -115,10 +110,10 @@ spec:
         - name: etcsysmd
           hostPath:
             path: /etc/systemd
-        - name: config
-          configMap:
-            defaultMode: 0640
-            name: kubebeat-daemonset-config
+        # - name: config
+        #   configMap:
+        #     defaultMode: 0640
+        #     name: kubebeat-daemonset-config
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -132,27 +127,12 @@ data:
     kubebeat:
       # Defines how often an event is sent to the output
       period: 30s
-      files: [
-        "/hostfs/etc/kubernetes/scheduler.conf",
-        "/hostfs/etc/kubernetes/controller-manager.conf",
-        "/hostfs/etc/kubernetes/admin.conf",
-        "/hostfs/etc/kubernetes/kubelet.conf",
-        "/hostfs/etc/kubernetes/manifests/etcd.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-apiserver.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-controller-manager.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-scheduler.yaml",
-        "/hostfs/etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
-        "/hostfs/var/lib/kubelet/config.yaml",
-        "/hostfs/var/lib/etcd",
-        "/hostfs/etc/kubernetes/pki"
-      ]
 
     # =================================== Kibana ===================================
     setup.kibana:
 
       # Kibana Host
       host: "http://host.docker.internal:5601"
-      # Host url for kind k8s - for minikube change to  host.minikube.internal
     # =============================== Elastic Cloud ================================
 
     # These settings simplify using Kubebeat with the Elastic Cloud (https://cloud.elastic.co/).
@@ -169,7 +149,6 @@ data:
     # ---------------------------- Elasticsearch Output ----------------------------
     output.elasticsearch:
       # Array of hosts to connect to.
-      # Host url for kind k8s - for minikube change to  host.minikube.internal
       hosts: ["host.docker.internal:9200"]
 
       # Protocol - either `http` (default) or `https`.

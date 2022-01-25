@@ -14,7 +14,7 @@ The interesting files are:
 - [POC Documentation](#poc-documentation)
   - [Table of contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
-  - [Running Kubebeat (without the agent)](#running-kubebeat-without-the-agent)
+  - [Running Kubebeat(without the agent)](#running-kubebeat-without-the-agent)
     - [Clean up](#clean-up)
     - [Remote Debugging](#remote-debugging)
 - [{Beat}](#beat)

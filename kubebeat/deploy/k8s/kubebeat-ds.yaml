@@ -132,6 +132,7 @@ data:
     setup.kibana:
 
       # Kibana Host
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
       host: "http://host.docker.internal:5601"
     # =============================== Elastic Cloud ================================
 
@@ -149,6 +150,7 @@ data:
     # ---------------------------- Elasticsearch Output ----------------------------
     output.elasticsearch:
       # Array of hosts to connect to.
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
       hosts: ["host.docker.internal:9200"]
 
       # Protocol - either `http` (default) or `https`.

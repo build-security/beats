@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-const EKSType = "eks-cluster"
+const EKSType = "aws-eks"
 
 type EKSFetcher struct {
 	eksProvider *EKSProvider

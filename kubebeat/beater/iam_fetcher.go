@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-const IAMType = "iam-role-policies"
+const IAMType = "aws-iam"
 
 type IAMFetcher struct {
 	iamProvider *IAMProvider

@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-const ECRType = "ecr-repositories"
+const ECRType = "aws-ecr"
 
 type ECRFetcher struct {
 	ecrProvider *ECRProvider

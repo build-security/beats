@@ -1,4 +1,4 @@
-package beater
+package add_cluster_id
 
 import (
 	"context"

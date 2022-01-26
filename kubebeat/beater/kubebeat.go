@@ -12,18 +12,20 @@ import (
 	"github.com/elastic/beats/v7/libbeat/logp"
 	"github.com/elastic/beats/v7/libbeat/processors"
 	"github.com/gofrs/uuid"
+
+	// Add kubebeat default processors
+	_ "github.com/elastic/beats/v7/kubebeat/processor"
 )
 
 // kubebeat configuration.
 type kubebeat struct {
-	done          chan struct{}
-	config        config.Config
-	client        beat.Client
-	eval          *evaluator
-	data          *Data
-	resultParser  *evaluationResultParser
-	scheduler     ResourceScheduler
-	clusterHelper *ClusterHelper
+	done         chan struct{}
+	config       config.Config
+	client       beat.Client
+	eval         *evaluator
+	data         *Data
+	resultParser *evaluationResultParser
+	scheduler    ResourceScheduler
 }
 
 const (
@@ -76,19 +78,13 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	clusterHelper, err := newClusterHelper()
-	if err != nil {
-		return nil, err
-	}
-
 	bt := &kubebeat{
-		done:          make(chan struct{}),
-		config:        c,
-		eval:          evaluator,
-		data:          data,
-		resultParser:  eventParser,
-		scheduler:     scheduler,
-		clusterHelper: clusterHelper,
+		done:         make(chan struct{}),
+		config:       c,
+		eval:         evaluator,
+		data:         data,
+		resultParser: eventParser,
+		scheduler:    scheduler,
 	}
 	return bt, nil
 }
@@ -102,7 +98,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 	defer bt.data.Stop()
 
-	procs, err := bt.configureProcessors()
+	procs, err := bt.configureProcessors(bt.config.Processors)
 	if err != nil {
 		return err
 	}
@@ -178,15 +174,6 @@ func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID, status string) {
 }
 
 // configureProcessors configure processors to be used by the beat
-func (bt *kubebeat) configureProcessors() (procs *processors.Processors, err error) {
-	processorConfig := []*common.Config{
-		common.MustNewConfigFrom(common.MapStr{
-			"add_fields": common.MapStr{
-				"target": "", // set field in root
-				"fields": common.MapStr{
-					"cluster_id": bt.clusterHelper.ClusterId(),
-				},
-			},
-		})}
-	return processors.New(processorConfig)
+func (bt *kubebeat) configureProcessors(processorsList processors.PluginConfig) (procs *processors.Processors, err error) {
+	return processors.New(processorsList)
 }

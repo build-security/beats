@@ -1,3 +1,4 @@
+# Todo delete before merge to elastic/beats
 apiVersion: v1
 kind: Pod
 metadata:
@@ -11,7 +12,7 @@ spec:
   containers:
     - image: kubebeat
       name: kubebeat-demo
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
       volumeMounts:
         - name: proc
           mountPath: /hostfs/proc

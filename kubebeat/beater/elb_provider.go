@@ -8,29 +8,21 @@ import (
 )
 
 type ELBProvider struct {
-	client *elasticloadbalancing.Client
-}
-
-func NewELBProvider(cfg aws.Config) *ELBProvider {
-	svc := elasticloadbalancing.New(cfg)
-	return &ELBProvider{
-		client: svc,
-	}
 }
 
 /// DescribeLoadBalancer method will return up to 400 results
 /// If we will ever want to increase this number, DescribeLoadBalancers support paginated requests
-func (provider ELBProvider) DescribeLoadBalancer(ctx context.Context, balancersNames []string) ([]elasticloadbalancing.LoadBalancerDescription, error) {
+func (provider ELBProvider) DescribeLoadBalancer(cfg aws.Config, ctx context.Context, balancersNames []string) (*elasticloadbalancing.DescribeLoadBalancersOutput, error) {
+	svc := elasticloadbalancing.NewFromConfig(cfg)
 	input := &elasticloadbalancing.DescribeLoadBalancersInput{
 		LoadBalancerNames: balancersNames,
 	}
 
-	req := provider.client.DescribeLoadBalancersRequest(input)
-	response, err := req.Send(ctx)
+	response, err := svc.DescribeLoadBalancers(ctx, input)
 	if err != nil {
-		logp.Err("Failed to describe load balancers %s from elb, error - %+v", balancersNames, err)
+		logp.Err("Failed to describe cluster %s from ecr, error - %+v", balancersNames, err)
 		return nil, err
 	}
 
-	return response.LoadBalancerDescriptions, err
+	return response, err
 }

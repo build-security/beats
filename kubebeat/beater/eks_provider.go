@@ -8,24 +8,17 @@ import (
 )
 
 type EKSProvider struct {
-	client *eks.Client
 }
 
-func NewEksProvider(cfg aws.Config) *EKSProvider {
-	svc := eks.New(cfg)
-	return &EKSProvider{
-		client: svc,
-	}
-}
-
-func (provider EKSProvider) DescribeCluster(ctx context.Context, clusterName string) (*eks.DescribeClusterResponse, error) {
+func (provider EKSProvider) DescribeCluster(cfg aws.Config, ctx context.Context, clusterName string) (*eks.DescribeClusterOutput, error) {
+	svc := eks.NewFromConfig(cfg)
 	input := &eks.DescribeClusterInput{
 		Name: &clusterName,
 	}
-	req := provider.client.DescribeClusterRequest(input)
-	response, err := req.Send(ctx)
+
+	response, err := svc.DescribeCluster(ctx, input)
 	if err != nil {
-		logp.Err("Failed to describe cluster %s from eks , error - %+v", clusterName, err)
+		logp.Err("Failed to describe cluster %s from ecr, error - %+v", clusterName, err)
 		return nil, err
 	}
 

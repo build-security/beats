@@ -3,6 +3,7 @@ package beater
 import (
 	"context"
 	"fmt"
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
@@ -23,6 +24,12 @@ type kubebeat struct {
 	scheduler    ResourceScheduler
 }
 
+const (
+	cycleStatusStart = "start"
+	cycleStatusEnd   = "end"
+	cycleStatusFail  = "fail"
+)
+
 // New creates an instance of kubebeat.
 func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	ctx := context.Background()
@@ -34,14 +41,20 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	logp.Info("Config initiated.")
 
-	data := NewData(ctx, c.Period)
+	data, err := NewData(ctx, c.Period)
+	if err != nil {
+		return nil, err
+	}
+
 	scheduler := NewSynchronousScheduler()
 	evaluator, err := NewEvaluator()
 	if err != nil {
 		return nil, err
 	}
 
-	eventParser, err := NewEvaluationResultParser()
+	// namespace will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
+	resultsIndex := config.Datastream("", config.ResultsDatastreamIndexPrefix)
+	eventParser, err := NewEvaluationResultParser(resultsIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +64,9 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	data.RegisterFetcher("kube_api", kubef)
-	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir))
-	data.RegisterFetcher("file_system", NewFileFetcher(c.Files))
+	data.RegisterFetcher("kube_api", kubef, true)
+	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
+	data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
 
 	bt := &kubebeat{
 		done:         make(chan struct{}),
@@ -80,7 +93,6 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		return err
 	}
 
-	// ticker := time.NewTicker(bt.config.Period)
 	output := bt.data.Output()
 
 	for {
@@ -88,26 +100,29 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 		case <-bt.done:
 			return nil
 		case o := <-output:
-			timestamp := time.Now()
-			runId, _ := uuid.NewV4()
+			cycleId, _ := uuid.NewV4()
+			// update hidden-index that the beat's cycle has started
+			bt.updateCycleStatus(cycleId, cycleStatusStart)
 
 			resourceCallback := func(resource interface{}) {
-				bt.resourceIteration(resource, runId, timestamp)
+				bt.resourceIteration(resource, cycleId)
 			}
 
 			bt.scheduler.ScheduleResources(o, resourceCallback)
+
+			// update hidden-index that the beat's cycle has ended
+			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}
 	}
 }
 
-func (bt *kubebeat) resourceIteration(resource interface{}, runId uuid.UUID, timestamp time.Time) {
+func (bt *kubebeat) resourceIteration(resource interface{}, cycleId uuid.UUID) {
 	result, err := bt.eval.Decision(resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return
 	}
-
-	events, err := bt.resultParser.ParseResult(result, runId, timestamp)
+	events, err := bt.resultParser.ParseResult(result, cycleId)
 
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
@@ -125,4 +140,16 @@ func (bt *kubebeat) Stop() {
 	close(bt.done)
 }
 
-// Todo Add registeraction handlers see x-pack/osquerybeat/beater/osquerybeat.go for example
+// updateCycleStatus updates beat status in metadata ES index.
+func (bt *kubebeat) updateCycleStatus(cycleId uuid.UUID, status string) {
+	metadataIndex := config.Datastream("", config.MetadataDatastreamIndexPrefix)
+	cycleEndedEvent := beat.Event{
+		Timestamp: time.Now(),
+		Meta:      common.MapStr{libevents.FieldMetaIndex: metadataIndex},
+		Fields: common.MapStr{
+			"cycle_id": cycleId,
+			"status":   status,
+		},
+	}
+	bt.client.Publish(cycleEndedEvent)
+}

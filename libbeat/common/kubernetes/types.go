@@ -82,6 +82,9 @@ type Secret = v1.Secret
 // Job data
 type Job = batchv1.Job
 
+// CronJob data
+type CronJob = batchv1.CronJob
+
 // Role data
 type Role = rbacv1.Role
 
@@ -115,6 +118,11 @@ const (
 
 // Time extracts time from k8s.Time type
 func Time(t *metav1.Time) time.Time {
+	return t.Time
+}
+
+// MicroTime extracts time from k8s.MicroTime type
+func MicroTime(t *metav1.MicroTime) time.Time {
 	return t.Time
 }
 

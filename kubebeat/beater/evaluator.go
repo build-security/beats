@@ -3,12 +3,7 @@ package beater
 import (
 	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"github.com/elastic/beats/v7/libbeat/logp"
-	"io/fs"
-	"os"
-	"strings"
 
 	"github.com/elastic/beats/v7/kubebeat/bundle"
 	"github.com/open-policy-agent/opa/sdk"
@@ -21,7 +16,7 @@ type evaluator struct {
 }
 
 func NewEvaluator() (*evaluator, error) {
-	policies := createCISPolicy(bundle.EmbeddedPolicy)
+	policies := bundle.CreateCISPolicy(bundle.EmbeddedPolicy)
 	// create a mock HTTP bundle bundleServer
 	bundleServer, err := sdktest.NewServer(sdktest.MockBundle("/bundles/bundle.tar.gz", policies))
 	if err != nil {
@@ -63,25 +58,4 @@ func (e *evaluator) Decision(input interface{}) (interface{}, error) {
 func (e *evaluator) Stop() {
 	e.opa.Stop(context.Background())
 	e.bundleServer.Stop()
-}
-
-func createCISPolicy(fileSystem embed.FS) map[string]string {
-	policies := make(map[string]string)
-
-	fs.WalkDir(fileSystem, ".", func(filepath string, info os.DirEntry, err error) error {
-		if err != nil {
-			logp.Err("Failed to create CIS policy- %+v", err)
-			return nil
-		}
-		if info.IsDir() == false && strings.HasSuffix(info.Name(), ".rego") && !strings.HasSuffix(info.Name(), "test.rego") {
-
-			data, err := fs.ReadFile(fileSystem, filepath)
-			if err == nil {
-				policies[filepath] = string(data)
-			}
-		}
-		return nil
-	})
-
-	return policies
 }

@@ -4,35 +4,31 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	types2 "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/elastic/beats/v7/libbeat/logp"
+	"time"
 )
 
-type IAMProvider struct {
-	client *iam.Client
+type IamProvider struct {
 }
 
-func NewIAMProvider(cfg aws.Config) *IAMProvider {
-	svc := iam.New(cfg)
-	return &IAMProvider{
-		client: svc,
-	}
-}
+func (f IamProvider) GetIamRolePermissions(cfg aws.Config, ctx context.Context, roleName string) (interface{}, error) {
 
-func (provider IAMProvider) GetIAMRolePermissions(ctx context.Context, roleName string) (interface{}, error) {
 	results := make([]interface{}, 0)
-	policiesIdentifiers, err := provider.getAllRolePolicies(ctx, roleName)
+	policiesIdentifiers, err := f.getAllRolePolicies(cfg, ctx, roleName)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)
 		return nil, err
 	}
 
+	svc := iam.NewFromConfig(cfg)
 	for _, policyId := range policiesIdentifiers {
+
 		input := &iam.GetRolePolicyInput{
 			PolicyName: policyId.PolicyName,
 			RoleName:   &roleName,
 		}
-		req := provider.client.GetRolePolicyRequest(input)
-		policy, err := req.Send(ctx)
+		policy, err := svc.GetRolePolicy(ctx, input)
 		if err != nil {
 			logp.Err("Failed to get policy %s - %+v", *policyId.PolicyName, err)
 			continue
@@ -43,12 +39,16 @@ func (provider IAMProvider) GetIAMRolePermissions(ctx context.Context, roleName 
 	return results, nil
 }
 
-func (provider IAMProvider) getAllRolePolicies(ctx context.Context, roleName string) ([]iam.AttachedPolicy, error) {
+func (f IamProvider) getAllRolePolicies(cfg aws.Config, ctx context.Context, roleName string) ([]types2.AttachedPolicy, error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	svc := iam.NewFromConfig(cfg)
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: &roleName,
 	}
-	req := provider.client.ListAttachedRolePoliciesRequest(input)
-	allPolicies, err := req.Send(ctx)
+
+	allPolicies, err := svc.ListAttachedRolePolicies(ctx, input)
 	if err != nil {
 		logp.Err("Failed to list role %s policies - %+v", roleName, err)
 		return nil, err

@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-const ELBType = "eks-elb"
+const ELBType = "aws-elb"
 
 type ELBFetcher struct {
 	elbProvider *ELBProvider

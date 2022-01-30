@@ -12,6 +12,7 @@ import (
 const (
 	duration     = 10 * time.Second
 	fetcherCount = 10
+	fetcherType  = "dummyFetcher"
 )
 
 type numberFetcher struct {
@@ -29,7 +30,7 @@ func (f *numberFetcher) Fetch() ([]FetcherResult, error) {
 
 func fetchValue(num int) []FetcherResult {
 	results := make([]FetcherResult, 0)
-	results = append(results, FetcherResult{"number", num})
+	results = append(results, FetcherResult{fetcherType, ResourceInfo{}})
 	return results
 }
 

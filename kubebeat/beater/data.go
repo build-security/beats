@@ -22,7 +22,7 @@ type Data struct {
 	cancel          context.CancelFunc
 	state           resourcesMap
 	fetcherRegistry map[string]registeredFetcher
-	leaseInfo       *LeaseInfo
+	leaseInfo       LeaderLease
 	wg              *sync.WaitGroup
 }
 
@@ -35,13 +35,12 @@ type registeredFetcher struct {
 
 // NewData returns a new Data instance with the given interval.
 func NewData(ctx context.Context, interval time.Duration) (*Data, error) {
-	ctx, cancel := context.WithCancel(ctx)
-
 	li, err := NewLeaseInfo(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(ctx)
 	return &Data{
 		interval:        interval,
 		output:          make(chan resourcesMap),

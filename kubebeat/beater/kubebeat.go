@@ -3,8 +3,9 @@ package beater
 import (
 	"context"
 	"fmt"
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
+
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
@@ -59,14 +60,15 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	kubef, err := NewKubeFetcher(c.KubeConfig, c.Period)
-	if err != nil {
-		return nil, err
-	}
+	// kubef, err := NewKubeFetcher(c.KubeConfig, c.Period)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	data.RegisterFetcher("kube_api", kubef, true)
-	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
-	data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
+	RegisterFetchers(data, cfg)
+	// data.RegisterFetcher("kube_api", kubef, true)
+	// data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
+	// data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
 
 	bt := &kubebeat{
 		done:         make(chan struct{}),

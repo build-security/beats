@@ -17,15 +17,27 @@ const (
 	DefaultLeaderLeaseName = "elastic-agent-cluster-leader"
 )
 
+type LeaderLease interface {
+	IsLeader() (bool, error)
+}
+
+type nonLeaderLease struct {
+	result bool
+}
+
+func (n *nonLeaderLease) IsLeader() (bool, error) {
+	return n.result, nil
+}
+
 type LeaseInfo struct {
 	ctx    context.Context
 	client k8s.Interface
 }
 
-func NewLeaseInfo(ctx context.Context) (*LeaseInfo, error) {
+func NewLeaseInfo(ctx context.Context) (LeaderLease, error) {
 	c, err := kubernetes.GetKubernetesClient("", kubernetes.KubeClientOptions{})
 	if err != nil {
-		return nil, err
+		return &nonLeaderLease{true}, nil
 	}
 
 	return &LeaseInfo{ctx, c}, nil

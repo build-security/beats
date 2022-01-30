@@ -198,12 +198,4 @@ func init() {
 	gob.Register(ProcessResource{})
 	gob.Register(FileSystemResource{})
 	gob.Register(FetcherResult{})
-
-	gob.Register(kubernetes.Pod{})
-	gob.Register(kubernetes.Secret{})
-	gob.Register(kubernetes.Role{})
-	gob.Register(kubernetes.RoleBinding{})
-	gob.Register(kubernetes.ClusterRole{})
-	gob.Register(kubernetes.ClusterRoleBinding{})
-	gob.Register(kubernetes.NetworkPolicy{})
 }

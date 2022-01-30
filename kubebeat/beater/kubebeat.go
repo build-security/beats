@@ -13,6 +13,7 @@ import (
 	"github.com/elastic/beats/v7/libbeat/processors"
 	"github.com/gofrs/uuid"
 
+	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	// Add kubebeat default processors
 	_ "github.com/elastic/beats/v7/kubebeat/processor"
 )

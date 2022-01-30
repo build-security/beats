@@ -10,6 +10,7 @@ const (
 )
 
 type ProcessResource struct {
+	ID   string        `json:"id"`
 	PID  string        `json:"pid"`
 	Cmd  string        `json:"command"`
 	Stat proc.ProcStat `json:"stat"`
@@ -46,7 +47,7 @@ func (f *ProcessesFetcher) Fetch() ([]FetcherResult, error) {
 			return ret, nil
 		}
 
-		ret = append(ret, FetcherResult{ProcessType, ProcessResource{p, cmd, stat}})
+		ret = append(ret, FetcherResult{ProcessType, ProcessResource{p, p, cmd, stat}})
 	}
 
 	return ret, nil

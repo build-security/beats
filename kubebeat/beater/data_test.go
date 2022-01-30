@@ -3,11 +3,12 @@ package beater
 import (
 	"context"
 	"fmt"
+	"go.uber.org/goleak"
 	"reflect"
 	"testing"
 	"time"
 
-	"go.uber.org/goleak"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
 )
 
 const (
@@ -24,12 +25,14 @@ func newNumberFetcher(num int) Fetcher {
 	return &numberFetcher{num, false}
 }
 
-func (f *numberFetcher) Fetch() ([]interface{}, error) {
+func (f *numberFetcher) Fetch() ([]FetcherResult, error) {
 	return fetchValue(f.num), nil
 }
 
-func fetchValue(num int) []interface{} {
-	return []interface{}{num}
+func fetchValue(num int) []FetcherResult {
+	results := make([]FetcherResult, 0)
+	results = append(results, FetcherResult{"number", num})
+	return results
 }
 
 func (f *numberFetcher) Stop() {
@@ -51,7 +54,8 @@ func registerNFetchers(t *testing.T, d *Data, n int) {
 }
 
 func TestDataRegisterFetcher(t *testing.T) {
-	d, err := NewData(context.Background(), duration)
+	client := k8sfake.NewSimpleClientset()
+	d, err := NewData(context.Background(), duration, client)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,13 +76,17 @@ func TestDataRun(t *testing.T) {
 	// Go defers are implemented as a LIFO stack. This should be the last one to run.
 	defer goleak.VerifyNone(t, opts)
 
-	d, err := NewData(context.Background(), duration)
+	client := k8sfake.NewSimpleClientset()
+	d, err := NewData(context.Background(), duration, client)
 	if err != nil {
 		t.Error(err)
 	}
 
 	registerNFetchers(t, d, fetcherCount)
-	d.Run()
+	err = d.Run()
+	if err != nil {
+		return
+	}
 	defer d.Stop()
 
 	o := d.Output()

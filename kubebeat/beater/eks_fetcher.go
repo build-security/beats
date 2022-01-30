@@ -25,7 +25,7 @@ func (f EKSFetcher) Fetch() ([]FetcherResult, error) {
 	results := make([]FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.eksProvider.DescribeCluster(ctx, f.clusterName)
-	results = append(results, FetcherResult{EKSType, result})
+	results = append(results, FetcherResult{EKSType, ResourceInfo{"dummy_id", result}})
 
 	return results, err
 }

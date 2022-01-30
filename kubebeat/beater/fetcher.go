@@ -7,6 +7,11 @@ type Fetcher interface {
 }
 
 type FetcherResult struct {
-	Type     string      `json:"type"`
-	Resource interface{} `json:"resource"`
+	Type     string       `json:"type"`
+	Resource ResourceInfo `json:"resource"`
+}
+
+type ResourceInfo struct {
+	ID   string      `json:"id"`
+	Data interface{} `json:"data"`
 }

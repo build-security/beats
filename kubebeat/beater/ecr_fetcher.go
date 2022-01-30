@@ -24,7 +24,7 @@ func (f ECRFetcher) Fetch() ([]FetcherResult, error) {
 	ctx := context.Background()
 	// TODO - The provider should get a list of the repositories it needs to check, and not check the entire ECR account`
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
-	results = append(results, FetcherResult{ECRType, repositories})
+	results = append(results, FetcherResult{ECRType, ResourceInfo{"dummy_id", repositories}})
 
 	return results, err
 }

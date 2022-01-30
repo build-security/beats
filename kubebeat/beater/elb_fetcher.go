@@ -25,7 +25,7 @@ func (f ELBFetcher) Fetch() ([]FetcherResult, error) {
 	results := make([]FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.lbNames)
-	results = append(results, FetcherResult{ELBType, result})
+	results = append(results, FetcherResult{ELBType, ResourceInfo{"dummy_id", result}})
 
 	return results, err
 }

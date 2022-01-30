@@ -46,35 +46,35 @@ func (f *FileSystemFetcher) Fetch() ([]FetcherResult, error) {
 			logp.Err("Failed to find matched glob for %s, error - %+v", filePattern, err)
 		}
 		for _, file := range matchedFiles {
-			resource := f.fetchSystemResource(file)
-			results = append(results, FetcherResult{FileSystemType, resource})
+			resourceInfo := f.fetchSystemResource(file)
+			results = append(results, FetcherResult{FileSystemType, resourceInfo})
 		}
 	}
 	return results, nil
 }
 
-func (f *FileSystemFetcher) fetchSystemResource(filePath string) interface{} {
+func (f *FileSystemFetcher) fetchSystemResource(filePath string) ResourceInfo {
 
 	info, err := os.Stat(filePath)
 	if err != nil {
 		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
-		return nil
+		return ResourceInfo{}
 	}
-	file := FromFileInfo(info, filePath)
+	resourceInfo := FromFileInfo(info, filePath)
 
-	return file
+	return resourceInfo
 }
 
-func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
+func FromFileInfo(info os.FileInfo, path string) ResourceInfo {
 
 	if info == nil {
-		return FileSystemResource{}
+		return ResourceInfo{}
 	}
 
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		logp.Err("Not a syscall.Stat_t")
-		return FileSystemResource{}
+		return ResourceInfo{}
 	}
 
 	uid := stat.Uid
@@ -87,7 +87,6 @@ func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
 	id := strconv.FormatUint(uint64(stat.Ino), 10)
 
 	data := FileSystemResource{
-		ID:       id,
 		FileName: info.Name(),
 		FileMode: mod,
 		Uid:      usr.Name,
@@ -95,7 +94,7 @@ func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
 		Path:     path,
 	}
 
-	return data
+	return ResourceInfo{id, data}
 }
 
 func (f *FileSystemFetcher) Stop() {

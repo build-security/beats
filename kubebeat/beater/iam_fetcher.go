@@ -25,7 +25,7 @@ func (f IAMFetcher) Fetch() ([]FetcherResult, error) {
 	results := make([]FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.roleName)
-	results = append(results, FetcherResult{IAMType, result})
+	results = append(results, FetcherResult{IAMType, ResourceInfo{"dummy_id", result}})
 
 	return results, err
 }

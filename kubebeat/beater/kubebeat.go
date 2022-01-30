@@ -3,11 +3,11 @@ package beater
 import (
 	"context"
 	"fmt"
+	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/libbeat/beat"
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
 	"github.com/elastic/beats/v7/libbeat/processors"
@@ -45,7 +45,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	logp.Info("Config initiated.")
 
-	data, err := NewData(ctx, c.Period)
+	client, err := kubernetes.GetKubernetesClient("", kubernetes.KubeClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	data, err := NewData(ctx, c.Period, client)
 	if err != nil {
 		return nil, err
 	}

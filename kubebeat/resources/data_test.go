@@ -1,4 +1,4 @@
-package beater
+package resources
 
 import (
 	"context"
@@ -58,7 +58,7 @@ func TestDataRegisterFetcher(t *testing.T) {
 	client := k8sfake.NewSimpleClientset()
 	d, err := NewData(context.Background(), duration, client)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	registerNFetchers(t, d, fetcherCount)

@@ -1,14 +1,16 @@
-package beater
+package fetchers
 
 import (
-	"github.com/elastic/beats/v7/libbeat/logp"
 	"os"
 	"os/user"
 	"strconv"
 	"syscall"
+
+	"github.com/elastic/beats/v7/kubebeat/resources"
+	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
-// FileSystemFetcher implement the Fetcher interface
+// FileSystemFetcher implement the resources.Fetcher interface
 // The FileSystemFetcher meant to fetch file/directories from the file system and ship it
 // to the Kubebeat
 type FileSystemFetcher struct {
@@ -30,14 +32,14 @@ type FileSystemResource struct {
 	Path     string `json:"path"`
 }
 
-func NewFileFetcher(filesPaths []string) Fetcher {
+func NewFileFetcher(filesPaths []string) resources.Fetcher {
 	return &FileSystemFetcher{
 		inputFilePatterns: filesPaths,
 	}
 }
 
-func (f *FileSystemFetcher) Fetch() ([]FetcherResult, error) {
-	results := make([]FetcherResult, 0)
+func (f *FileSystemFetcher) Fetch() ([]resources.FetcherResult, error) {
+	results := make([]resources.FetcherResult, 0)
 
 	// Input files might contain glob pattern
 	for _, filePattern := range f.inputFilePatterns {
@@ -47,34 +49,34 @@ func (f *FileSystemFetcher) Fetch() ([]FetcherResult, error) {
 		}
 		for _, file := range matchedFiles {
 			resourceInfo := f.fetchSystemResource(file)
-			results = append(results, FetcherResult{FileSystemType, resourceInfo})
+			results = append(results, resources.FetcherResult{Type: FileSystemType, Resource: resourceInfo})
 		}
 	}
 	return results, nil
 }
 
-func (f *FileSystemFetcher) fetchSystemResource(filePath string) ResourceInfo {
+func (f *FileSystemFetcher) fetchSystemResource(filePath string) resources.ResourceInfo {
 
 	info, err := os.Stat(filePath)
 	if err != nil {
 		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
-		return ResourceInfo{}
+		return resources.ResourceInfo{}
 	}
 	resourceInfo := FromFileInfo(info, filePath)
 
 	return resourceInfo
 }
 
-func FromFileInfo(info os.FileInfo, path string) ResourceInfo {
+func FromFileInfo(info os.FileInfo, path string) resources.ResourceInfo {
 
 	if info == nil {
-		return ResourceInfo{}
+		return resources.ResourceInfo{}
 	}
 
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		logp.Err("Not a syscall.Stat_t")
-		return ResourceInfo{}
+		return resources.ResourceInfo{}
 	}
 
 	uid := stat.Uid
@@ -94,7 +96,7 @@ func FromFileInfo(info os.FileInfo, path string) ResourceInfo {
 		Path:     path,
 	}
 
-	return ResourceInfo{id, data}
+	return resources.ResourceInfo{ID: id, Data: data}
 }
 
 func (f *FileSystemFetcher) Stop() {

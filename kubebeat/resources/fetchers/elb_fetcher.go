@@ -1,8 +1,10 @@
-package beater
+package fetchers
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/elastic/beats/v7/kubebeat/resources"
 )
 
 const ELBType = "aws-elb"
@@ -12,7 +14,7 @@ type ELBFetcher struct {
 	lbNames     []string
 }
 
-func NewELBFetcher(cfg aws.Config, loadBalancersNames []string) (Fetcher, error) {
+func NewELBFetcher(cfg aws.Config, loadBalancersNames []string) (resources.Fetcher, error) {
 	elb := NewELBProvider(cfg)
 
 	return &ELBFetcher{
@@ -21,11 +23,12 @@ func NewELBFetcher(cfg aws.Config, loadBalancersNames []string) (Fetcher, error)
 	}, nil
 }
 
-func (f ELBFetcher) Fetch() ([]FetcherResult, error) {
-	results := make([]FetcherResult, 0)
+func (f ELBFetcher) Fetch() ([]resources.FetcherResult, error) {
+	results := make([]resources.FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.lbNames)
-	results = append(results, FetcherResult{ELBType, ResourceInfo{"dummy_id", result}})
+	resourceInfo := resources.ResourceInfo{"dummy_id", result}
+	results = append(results, resources.FetcherResult{ELBType, resourceInfo})
 
 	return results, err
 }

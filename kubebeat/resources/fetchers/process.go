@@ -9,12 +9,6 @@ const (
 	ProcessType = "process"
 )
 
-type ProcessResource struct {
-	PID  string        `json:"pid"`
-	Cmd  string        `json:"command"`
-	Stat proc.ProcStat `json:"stat"`
-}
-
 type ProcessesFetcher struct {
 	directory string // parent directory of target procfs
 }
@@ -46,9 +40,8 @@ func (f *ProcessesFetcher) Fetch() ([]resources.FetcherResult, error) {
 			return ret, nil
 		}
 
-		resourceObj := resources.ResourceInfo{ID: p, Data: ProcessResource{p, cmd, stat}}
+		resourceObj := resources.ResourceInfo{ID: p, Data: resources.ProcessResource{PID: p, Cmd: cmd, Stat: stat}}
 		ret = append(ret, resources.FetcherResult{Type: ProcessType, Resource: resourceObj})
-
 	}
 
 	return ret, nil

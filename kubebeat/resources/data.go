@@ -115,16 +115,13 @@ type update struct {
 
 func (d *Data) fetchWorker(updates chan update, k string, rf registeredFetcher) {
 	for {
-		// Go to sleep in each iteration.
-		time.Sleep(d.interval)
-
 		select {
 		case <-d.ctx.Done():
 			return
 		default:
 			if rf.leaderOnly {
 				if !d.IsLeader() {
-					continue
+					break
 				}
 			}
 
@@ -135,6 +132,8 @@ func (d *Data) fetchWorker(updates chan update, k string, rf registeredFetcher) 
 
 			updates <- update{k, val}
 		}
+		// Go to sleep in each iteration.
+		time.Sleep(d.interval)
 	}
 }
 

@@ -35,13 +35,12 @@ type registeredFetcher struct {
 
 // NewData returns a new Data instance with the given interval.
 func NewData(ctx context.Context, interval time.Duration, client kubernetes.Interface) (*Data, error) {
-	ctx, cancel := context.WithCancel(ctx)
-
 	li, err := NewLeaseInfo(ctx, client)
 	if err != nil {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(ctx)
 	return &Data{
 		interval:        interval,
 		output:          make(chan Map),
@@ -124,7 +123,6 @@ func (d *Data) fetchWorker(updates chan update, k string, rf registeredFetcher) 
 					break
 				}
 			}
-
 			val, err := rf.f.Fetch()
 			if err != nil {
 				logp.L().Errorf("error running fetcher for key %q: %v", k, err)

@@ -2,10 +2,11 @@ package beater
 
 import (
 	"github.com/elastic/beats/v7/kubebeat/config"
+	"github.com/elastic/beats/v7/kubebeat/resources"
 	"github.com/elastic/beats/v7/libbeat/common"
 )
 
-func RegisterFetchers(data *Data, cfg *common.Config) error {
+func RegisterFetchers(data *resources.Data, cfg *common.Config) error {
 	conf := config.Config{}
 	err := cfg.Unpack(&conf)
 	if err != nil {

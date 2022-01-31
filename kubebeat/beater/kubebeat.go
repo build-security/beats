@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
-
 	"github.com/elastic/beats/v7/kubebeat/config"
 	"github.com/elastic/beats/v7/kubebeat/opa"
 	_ "github.com/elastic/beats/v7/kubebeat/processor" // Add kubebeat default processors.

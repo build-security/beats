@@ -69,7 +69,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	data.RegisterFetcher("kube_api", kubef, false)
+	data.RegisterFetcher("kube_api", kubef, true)
 	data.RegisterFetcher("processes", NewProcessesFetcher(procfsdir), false)
 	data.RegisterFetcher("file_system", NewFileFetcher(c.Files), false)
 

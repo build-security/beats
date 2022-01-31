@@ -157,7 +157,7 @@ func (f *KubeFetcher) Fetch() ([]FetcherResult, error) {
 			}
 
 			addTypeInformationToObject(o) // See https://github.com/kubernetes/kubernetes/issues/3030
-			resourceID := addResourceID(o)
+			resourceID := getResourceID(o)
 
 			ret = append(ret, FetcherResult{KubeAPIType, ResourceInfo{resourceID, o}})
 		}
@@ -194,11 +194,12 @@ func addTypeInformationToObject(obj runtime.Object) error {
 	return nil
 }
 
-func addResourceID(obj runtime.Object) string {
+func getResourceID(obj runtime.Object) string {
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		// Some err occur while trying to get metadata - return obj without id
 		fmt.Errorf("missing required metadata fields; %w", err)
+		return ""
 	}
 
 	uid := accessor.GetUID()

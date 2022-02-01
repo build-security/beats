@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
@@ -26,7 +27,6 @@ type Data struct {
 type Map map[string][]FetcherResult
 
 // NewData returns a new Data instance with the given interval.
-
 func NewData(ctx context.Context, interval time.Duration, fetchers FetchersRegistry) (*Data, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	return &Data{
@@ -150,4 +150,12 @@ func init() {
 	gob.Register(FetcherResult{})
 	gob.Register(ProcessResource{})
 	gob.Register(FileSystemResource{})
+
+	gob.Register(kubernetes.Pod{})
+	gob.Register(kubernetes.Secret{})
+	gob.Register(kubernetes.Role{})
+	gob.Register(kubernetes.RoleBinding{})
+	gob.Register(kubernetes.ClusterRole{})
+	gob.Register(kubernetes.ClusterRoleBinding{})
+	gob.Register(kubernetes.NetworkPolicy{})
 }

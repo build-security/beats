@@ -1,0 +1,143 @@
+package resources
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+)
+
+type numberFetcher struct {
+	num        int
+	stopCalled bool
+}
+
+func newNumberFetcher(num int) Fetcher {
+	return &numberFetcher{num, false}
+}
+
+func (f *numberFetcher) Fetch() ([]FetcherResult, error) {
+	return fetchValue(f.num), nil
+}
+
+func (f *numberFetcher) Stop() {
+	f.stopCalled = true
+}
+
+func fetchValue(num int) []FetcherResult {
+	return []FetcherResult{
+		{
+			Type:     "number",
+			Resource: num,
+		},
+	}
+}
+
+func registerNFetchers(t *testing.T, reg FetchersRegistry, n int) {
+	for i := 0; i < n; i++ {
+		key := fmt.Sprint(i)
+		err := reg.Register(key, newNumberFetcher(i))
+		assert.NoError(t, err)
+	}
+}
+
+type RegistryTestSuit struct {
+	suite.Suite
+	registry FetchersRegistry
+}
+
+func TestExampleTestSuite(t *testing.T) {
+	suite.Run(t, new(RegistryTestSuit))
+}
+
+func (s *RegistryTestSuit) SetupTest() {
+	s.registry = NewFetcherRegistry()
+}
+
+func (s *RegistryTestSuit) TestKeys() {
+	var tests = []struct {
+		key   string
+		value int
+	}{
+		{
+			"some_fetcher", 2,
+		},
+		{
+			"other_fetcher", 4,
+		},
+		{
+			"new_fetcher", 6,
+		},
+	}
+
+	for i, test := range tests {
+		f := newNumberFetcher(test.value)
+		s.registry.Register(test.key, f)
+
+		s.Equal(i+1, len(s.registry.Keys()))
+	}
+
+	s.Equal(s.registry.Keys(), []string{"some_fetcher", "other_fetcher", "new_fetcher"})
+}
+
+func (s *RegistryTestSuit) TestRegisterDuplicateKey() {
+	f := newNumberFetcher(1)
+	err := s.registry.Register("some-key", f)
+	s.NoError(err)
+
+	err = s.registry.Register("some-key", f)
+	s.Error(err)
+}
+
+func (s *RegistryTestSuit) TestRegister10() {
+	count := 10
+	registerNFetchers(s.T(), s.registry, count)
+	s.Equal(count, len(s.registry.Keys()))
+}
+
+func (s *RegistryTestSuit) TestRunNotRegistered() {
+	f := newNumberFetcher(1)
+	err := s.registry.Register("some-key", f)
+	s.NoError(err)
+
+	arr, err := s.registry.Run("unknown")
+	s.Error(err)
+	s.Empty(arr)
+}
+
+func (s *RegistryTestSuit) TestRunRegistered() {
+	f1 := newNumberFetcher(1)
+	err := s.registry.Register("some-key-1", f1)
+	s.NoError(err)
+
+	f2 := newNumberFetcher(2)
+	err = s.registry.Register("some-key-2", f2)
+	s.NoError(err)
+
+	f3 := newNumberFetcher(3)
+	err = s.registry.Register("some-key-3", f3)
+	s.NoError(err)
+
+	var tests = []struct {
+		key   string
+		value int
+	}{
+		{
+			"some-key-1", 1,
+		},
+		{
+			"some-key-2", 2,
+		},
+		{
+			"some-key-3", 3,
+		},
+	}
+
+	for _, test := range tests {
+		arr, err := s.registry.Run(test.key)
+		s.NoError(err)
+		s.Equal(1, len(arr))
+		s.Equal(test.value, arr[0].Resource)
+	}
+}

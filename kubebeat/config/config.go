@@ -4,10 +4,8 @@
 package config
 
 import (
-	"time"
-
-	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/processors"
+	"time"
 )
 
 // Todo add consts as configurable vars from integration package - add datastream struct
@@ -21,7 +19,6 @@ type Config struct {
 	Period     time.Duration           `config:"period"`
 	Files      []string                `config:"files"`
 	Processors processors.PluginConfig `config:"processors"`
-	Fetchers   []*common.Config        `config:"fetchers"`
 }
 
 var DefaultConfig = Config{

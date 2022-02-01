@@ -25,6 +25,23 @@ func (f *numberFetcher) Stop() {
 	f.stopCalled = true
 }
 
+type boolFetcherCondition struct {
+	val  bool
+	name string
+}
+
+func newBoolFetcherCondition(val bool, name string) FetcherCondition {
+	return &boolFetcherCondition{val, name}
+}
+
+func (c *boolFetcherCondition) Condition() bool {
+	return c.val
+}
+
+func (c *boolFetcherCondition) Name() string {
+	return c.name
+}
+
 func fetchValue(num int) []FetcherResult {
 	return []FetcherResult{
 		{
@@ -139,5 +156,50 @@ func (s *RegistryTestSuit) TestRunRegistered() {
 		s.NoError(err)
 		s.Equal(1, len(arr))
 		s.Equal(test.value, arr[0].Resource)
+	}
+}
+
+func (s *RegistryTestSuit) TestShouldRunNotRegistered() {
+	f := newNumberFetcher(1)
+	err := s.registry.Register("some-key", f)
+	s.NoError(err)
+
+	res := s.registry.ShouldRun("unknown")
+	s.False(res)
+}
+
+func (s *RegistryTestSuit) TestShouldRun() {
+	conditionTrue := newBoolFetcherCondition(true, "always-fetcher-condition")
+	conditionFlase := newBoolFetcherCondition(false, "never-fetcher-condition")
+
+	var tests = []struct {
+		conditions []FetcherCondition
+		expected   bool
+	}{
+		{
+			[]FetcherCondition{}, true,
+		},
+		{
+			[]FetcherCondition{conditionTrue}, true,
+		},
+		{
+			[]FetcherCondition{conditionTrue, conditionTrue}, true,
+		},
+		{
+			[]FetcherCondition{conditionTrue, conditionTrue, conditionFlase}, false,
+		},
+		{
+			[]FetcherCondition{conditionFlase, conditionTrue, conditionTrue, conditionTrue, conditionTrue}, false,
+		},
+	}
+
+	for _, test := range tests {
+		s.registry = NewFetcherRegistry()
+		f := newNumberFetcher(1)
+		err := s.registry.Register("some-key", f, test.conditions...)
+		s.NoError(err)
+
+		should := s.registry.ShouldRun("some-key")
+		s.Equal(test.expected, should)
 	}
 }

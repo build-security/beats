@@ -21,7 +21,7 @@ type leaseProvider struct {
 	client kubernetes.Interface
 }
 
-func NewLeaderLeaseProvider(ctx context.Context, client kubernetes.Interface) *leaseProvider {
+func NewLeaderLeaseProvider(ctx context.Context, client kubernetes.Interface) LeaderLeaseProvider {
 	return &leaseProvider{ctx, client}
 }
 

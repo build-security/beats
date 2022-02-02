@@ -49,7 +49,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	logp.Info("Config initiated.")
 
-	fetchersRegistry, err := InitRegistry(c)
+	fetchersRegistry, err := InitRegistry(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 	}
 }
 
-func InitRegistry(c config.Config) (resources.FetchersRegistry, error) {
+func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegistry, error) {
 	registry := resources.NewFetcherRegistry()
 	kubef, err := fetchers.NewKubeFetcher(c.KubeConfig, c.Period)
 	if err != nil {
@@ -141,7 +141,7 @@ func InitRegistry(c config.Config) (resources.FetchersRegistry, error) {
 		return nil, err
 	}
 
-	leaseProvider := conditions.NewLeaderLeaseProvider(context.Background(), client)
+	leaseProvider := conditions.NewLeaderLeaseProvider(ctx, client)
 	condition := conditions.NewLeaseFetcherCondition(leaseProvider)
 
 	if err = registry.Register("kube_api", kubef, condition); err != nil {

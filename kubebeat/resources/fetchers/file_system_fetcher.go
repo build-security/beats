@@ -38,34 +38,40 @@ func (f *FileSystemFetcher) Fetch() ([]resources.FetcherResult, error) {
 		}
 		for _, file := range matchedFiles {
 			resourceInfo := f.fetchSystemResource(file)
-			results = append(results, resources.FetcherResult{Type: FileSystemType, Resource: resourceInfo})
+			resourceID := f.GetResourceID(resourceInfo)
+
+			results = append(results, resources.FetcherResult{
+				ID:       resourceID,
+				Type:     FileSystemType,
+				Resource: resourceInfo,
+			})
 		}
 	}
 	return results, nil
 }
 
-func (f *FileSystemFetcher) fetchSystemResource(filePath string) resources.ResourceInfo {
+func (f *FileSystemFetcher) fetchSystemResource(filePath string) resources.FileSystemResource {
 
 	info, err := os.Stat(filePath)
 	if err != nil {
 		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
-		return resources.ResourceInfo{}
+		return resources.FileSystemResource{}
 	}
 	resourceInfo := FromFileInfo(info, filePath)
 
 	return resourceInfo
 }
 
-func FromFileInfo(info os.FileInfo, path string) resources.ResourceInfo {
+func FromFileInfo(info os.FileInfo, path string) resources.FileSystemResource {
 
 	if info == nil {
-		return resources.ResourceInfo{}
+		return resources.FileSystemResource{}
 	}
 
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		logp.Err("Not a syscall.Stat_t")
-		return resources.ResourceInfo{}
+		return resources.FileSystemResource{}
 	}
 
 	uid := stat.Uid
@@ -75,7 +81,7 @@ func FromFileInfo(info os.FileInfo, path string) resources.ResourceInfo {
 	usr, _ := user.LookupId(u)
 	group, _ := user.LookupGroupId(g)
 	mod := strconv.FormatUint(uint64(info.Mode().Perm()), 8)
-	id := strconv.FormatUint(uint64(stat.Ino), 10)
+	inode := strconv.FormatUint(uint64(stat.Ino), 10)
 
 	data := resources.FileSystemResource{
 		FileName: info.Name(),
@@ -83,10 +89,16 @@ func FromFileInfo(info os.FileInfo, path string) resources.ResourceInfo {
 		Uid:      usr.Name,
 		Gid:      group.Name,
 		Path:     path,
+		Inode:    inode,
 	}
 
-	return resources.ResourceInfo{ID: id, Data: data}
+	return data
 }
 
 func (f *FileSystemFetcher) Stop() {
+}
+
+func (f *FileSystemFetcher) GetResourceID(resource interface{}) string {
+	fsResource := resource.(resources.FileSystemResource)
+	return fsResource.Inode
 }

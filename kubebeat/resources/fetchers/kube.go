@@ -158,10 +158,9 @@ func (f *KubeFetcher) Fetch() ([]resources.FetcherResult, error) {
 			}
 
 			addTypeInformationToObject(o) // See https://github.com/kubernetes/kubernetes/issues/3030
-			resourceID := getResourceID(o)
+			resourceID := f.GetResourceID(o)
 
-			resourceInfo := resources.ResourceInfo{ID: resourceID, Data: o}
-			ret = append(ret, resources.FetcherResult{Type: KubeAPIType, Resource: resourceInfo})
+			ret = append(ret, resources.FetcherResult{ID: resourceID, Type: KubeAPIType, Resource: o})
 		}
 	}
 
@@ -172,6 +171,19 @@ func (f *KubeFetcher) Stop() {
 	for _, w := range f.watchers {
 		w.Stop()
 	}
+}
+
+func (f *KubeFetcher) GetResourceID(obj interface{}) string {
+	kubeApiResource := obj.(runtime.Object)
+	accessor, err := meta.Accessor(kubeApiResource)
+	if err != nil {
+		// Some err occur while trying to get metadata - return obj without id
+		fmt.Errorf("missing required metadata fields; %w", err)
+		return ""
+	}
+
+	uid := accessor.GetUID()
+	return string(uid)
 }
 
 // addTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
@@ -194,16 +206,4 @@ func addTypeInformationToObject(obj runtime.Object) error {
 	}
 
 	return nil
-}
-
-func getResourceID(obj runtime.Object) string {
-	accessor, err := meta.Accessor(obj)
-	if err != nil {
-		// Some err occur while trying to get metadata - return obj without id
-		fmt.Errorf("missing required metadata fields; %w", err)
-		return ""
-	}
-
-	uid := accessor.GetUID()
-	return string(uid)
 }

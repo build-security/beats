@@ -27,11 +27,15 @@ func (f ELBFetcher) Fetch() ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.lbNames)
-	resourceInfo := resources.ResourceInfo{"dummy_id", result}
-	results = append(results, resources.FetcherResult{ELBType, resourceInfo})
+	resourceID := f.GetResourceID(result)
+	results = append(results, resources.FetcherResult{ID: resourceID, Type: ELBType, Resource: result})
 
 	return results, err
 }
 
 func (f ELBFetcher) Stop() {
+}
+
+func (f ELBFetcher) GetResourceID(resource interface{}) string {
+	return ""
 }

@@ -23,19 +23,26 @@ func (parser *EventParser) ParseResult(result interface{}, uuid uuid.UUID, times
 	if findings, ok := opaResult["findings"].([]interface{}); ok {
 		for _, findingRaw := range findings {
 			if finding, ok := findingRaw.(map[string]interface{}); ok {
-				event := beat.Event{
-					Timestamp: timestamp,
-					Fields: common.MapStr{
-						"run_id":   uuid,
-						"result":   finding["result"],
-						"resource": opaResult["resource"],
-						"rule":     finding["rule"],
-					},
-				}
-				events = append(events, event)
+				beatEvent := generateBeatEvent(uuid, opaResult, finding, timestamp)
+				events = append(events, beatEvent)
 			}
 		}
 	}
 
 	return events, nil
+}
+
+func generateBeatEvent(uuid uuid.UUID, opaResult map[string]interface{}, finding map[string]interface{},
+	timestamp time.Time) beat.Event {
+	return beat.Event{
+		Timestamp: timestamp,
+		Fields: common.MapStr{
+			"run_id":   uuid,
+			"result":   finding["result"],
+			"resource": opaResult["resource"],
+			"id":       opaResult["id"],
+			"type":     opaResult["type"],
+			"rule":     finding["rule"],
+		},
+	}
 }

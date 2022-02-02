@@ -26,11 +26,15 @@ func (f ECRFetcher) Fetch() ([]resources.FetcherResult, error) {
 	ctx := context.Background()
 	// TODO - The provider should get a list of the repositories it needs to check, and not check the entire ECR account`
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
-	resourceInfo := resources.ResourceInfo{ID: "dummy_id", Data: repositories}
-	results = append(results, resources.FetcherResult{Type: ECRType, Resource: resourceInfo})
+	resourceID := f.GetResourceID(repositories)
+	results = append(results, resources.FetcherResult{ID: resourceID, Type: ECRType, Resource: repositories})
 
 	return results, err
 }
 
 func (f ECRFetcher) Stop() {
+}
+
+func (f ECRFetcher) GetResourceID(resource interface{}) string {
+	return ""
 }

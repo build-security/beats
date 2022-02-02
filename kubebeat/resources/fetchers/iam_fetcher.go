@@ -27,11 +27,14 @@ func (f IAMFetcher) Fetch() ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.roleName)
-	resourceInfo := resources.ResourceInfo{ID: "dummy_id", Data: result}
-	results = append(results, resources.FetcherResult{Type: IAMType, Resource: resourceInfo})
+	results = append(results, resources.FetcherResult{ID: f.GetResourceID(result), Type: IAMType, Resource: result})
 
 	return results, err
 }
 
 func (f IAMFetcher) Stop() {
+}
+
+func (f IAMFetcher) GetResourceID(resource interface{}) string {
+	return ""
 }

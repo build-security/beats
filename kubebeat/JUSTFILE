@@ -22,7 +22,7 @@ deploy-kubebeat:
 build-deploy-kubebeat: build-kubebeat load-kubebeat-image deploy-kubebeat
 
 build-kubebeat-debug:
-  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -gcflags "all=-N -l" && docker build -f Dockerfile.debug -t kubebeat .
+  GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -gcflags "all=-N -l" && docker build -f Dockerfile.debug -t kubebeat .
 
 deploy-kubebeat-debug:
   kubectl delete -f deploy/k8s/kubebeat-ds-debug.yaml -n kube-system & kubectl apply -f deploy/k8s/kubebeat-ds-debug.yaml -n kube-system

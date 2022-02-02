@@ -40,12 +40,18 @@ func (f *ProcessesFetcher) Fetch() ([]resources.FetcherResult, error) {
 			return ret, nil
 		}
 
-		resourceObj := resources.ResourceInfo{ID: p, Data: resources.ProcessResource{PID: p, Cmd: cmd, Stat: stat}}
-		ret = append(ret, resources.FetcherResult{Type: ProcessType, Resource: resourceObj})
+		resourceObj := resources.ProcessResource{PID: p, Cmd: cmd, Stat: stat}
+		resourceID := f.GetResourceID(resourceObj)
+		ret = append(ret, resources.FetcherResult{ID: resourceID, Type: ProcessType, Resource: resourceObj})
 	}
 
 	return ret, nil
 }
 
 func (f *ProcessesFetcher) Stop() {
+}
+
+func (f *ProcessesFetcher) GetResourceID(resource interface{}) string {
+	procResource := resource.(resources.ProcessResource)
+	return procResource.PID
 }

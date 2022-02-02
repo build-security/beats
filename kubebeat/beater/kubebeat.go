@@ -76,7 +76,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	if err = data.RegisterFetcher("kube_api", kubef, true); err != nil {
+	if err = data.RegisterFetcher("kube_api", kubef, false); err != nil {
 		return nil, err
 	}
 	if err = data.RegisterFetcher("processes", fetchers.NewProcessesFetcher(processesDir), false); err != nil {

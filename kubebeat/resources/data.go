@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+
 	k8sclient "k8s.io/client-go/kubernetes"
 	"sync"
 	"time"
@@ -36,12 +37,13 @@ type registeredFetcher struct {
 
 // NewData returns a new Data instance with the given interval.
 func NewData(ctx context.Context, interval time.Duration, client k8sclient.Interface) (*Data, error) {
+	ctx, cancel := context.WithCancel(ctx)
+
 	li, err := NewLeaseInfo(ctx, client)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
 	return &Data{
 		interval:        interval,
 		output:          make(chan Map),
@@ -195,7 +197,6 @@ func init() {
 	gob.Register(FetcherResult{})
 	gob.Register(ProcessResource{})
 	gob.Register(FileSystemResource{})
-
 	gob.Register(kubernetes.Pod{})
 	gob.Register(kubernetes.Secret{})
 	gob.Register(kubernetes.Role{})

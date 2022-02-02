@@ -27,11 +27,15 @@ func (f EKSFetcher) Fetch() ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 	ctx := context.Background()
 	result, err := f.eksProvider.DescribeCluster(ctx, f.clusterName)
-	resourceInfo := resources.ResourceInfo{ID: "dummy_id", Data: result}
-	results = append(results, resources.FetcherResult{Type: EKSType, Resource: resourceInfo})
+	resourceID := f.GetResourceID(result)
+	results = append(results, resources.FetcherResult{ID: resourceID, Type: EKSType, Resource: result})
 
 	return results, err
 }
 
 func (f EKSFetcher) Stop() {
+}
+
+func (f EKSFetcher) GetResourceID(resource interface{}) string {
+	return ""
 }

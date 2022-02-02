@@ -6,16 +6,13 @@ import "github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/pkg
 type Fetcher interface {
 	Fetch() ([]FetcherResult, error)
 	Stop()
+	GetResourceID(resource interface{}) string
 }
 
 type FetcherResult struct {
-	Type     string       `json:"type"`
-	Resource ResourceInfo `json:"resource"`
-}
-
-type ResourceInfo struct {
-	ID   string      `json:"id"`
-	Data interface{} `json:"data"`
+	ID       string      `json:"id"`
+	Type     string      `json:"type"`
+	Resource interface{} `json:"resource"`
 }
 
 type FileSystemResource struct {
@@ -24,6 +21,7 @@ type FileSystemResource struct {
 	Gid      string `json:"gid"`
 	Uid      string `json:"uid"`
 	Path     string `json:"path"`
+	Inode    string `json:"inode"`
 }
 
 type ProcessResource struct {

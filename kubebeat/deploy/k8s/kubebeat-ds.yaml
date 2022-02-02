@@ -27,12 +27,14 @@ spec:
         env:
         - name: ES_HOST
           value: "host.docker.internal:9200"
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
         - name: ES_USERNAME
           value: elastic
         - name: ES_PASSWORD
           value: changeme
         - name: KIBANA_HOST
           value: "http://host.docker.internal:5601"
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
         - name: ELASTIC_CLOUD_ID
           value: none
         - name: ELASTIC_CLOUD_AUTH
@@ -50,7 +52,7 @@ spec:
           #   memory: 200Mi
           requests:
             cpu: 100m
-            memory: 100Mi
+            memory: 200Mi
         volumeMounts:
         - name: config
           mountPath: /kubebeat.yml
@@ -213,6 +215,8 @@ rules:
   - events
   - pods
   - services
+  - configmaps
+  - secrets
   verbs: ["get", "list", "watch"]
 # Enable this rule only if planing to use Kubernetes keystore
 #- apiGroups: [""]
@@ -228,11 +232,23 @@ rules:
   - statefulsets
   - deployments
   - replicasets
+  - daemonsets
   verbs: ["get", "list", "watch"]
 - apiGroups: ["batch"]
   resources:
   - jobs
   verbs: ["get", "list", "watch"]
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:

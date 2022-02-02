@@ -22,22 +22,19 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: kubebeat
-        image: kubebeat
+        image: kubebeat:latest
         imagePullPolicy: IfNotPresent
-#         args: [
-#           "-e",
-#           "-d",
-#           "'*'"
-#           ]
         env:
-        - name: ES_HOSTS
+        - name: ES_HOST
           value: "host.docker.internal:9200"
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
         - name: ES_USERNAME
           value: elastic
         - name: ES_PASSWORD
           value: changeme
         - name: KIBANA_HOST
           value: "http://host.docker.internal:5601"
+      # Host url for kind k8s - for minikube change to  host.minikube.internal
         - name: ELASTIC_CLOUD_ID
           value: none
         - name: ELASTIC_CLOUD_AUTH
@@ -51,8 +48,8 @@ spec:
           # If using Red Hat OpenShift uncomment this:
           #privileged: true
         resources:
-          limits:
-            memory: 500Mi
+          # limits:
+          #   memory: 200Mi
           requests:
             cpu: 100m
             memory: 200Mi
@@ -133,18 +130,18 @@ data:
       # Defines how often an event is sent to the output
       period: 30s
       files: [
-        "/hostfs/etc/kubernetes/scheduler.conf",
-        "/hostfs/etc/kubernetes/controller-manager.conf",
-        "/hostfs/etc/kubernetes/admin.conf",
-        "/hostfs/etc/kubernetes/kubelet.conf",
-        "/hostfs/etc/kubernetes/manifests/etcd.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-apiserver.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-controller-manager.yaml",
-        "/hostfs/etc/kubernetes/manifests/kube-scheduler.yaml",
-        "/hostfs/etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
-        "/hostfs/var/lib/kubelet/config.yaml",
-        "/hostfs/var/lib/etcd",
-        "/hostfs/etc/kubernetes/pki"
+          "/hostfs/etc/kubernetes/scheduler.conf",
+          "/hostfs/etc/kubernetes/controller-manager.conf",
+          "/hostfs/etc/kubernetes/admin.conf",
+          "/hostfs/etc/kubernetes/kubelet.conf",
+          "/hostfs/etc/kubernetes/manifests/etcd.yaml",
+          "/hostfs/etc/kubernetes/manifests/kube-apiserver.yaml",
+          "/hostfs/etc/kubernetes/manifests/kube-controller-manager.yaml",
+          "/hostfs/etc/kubernetes/manifests/kube-scheduler.yaml",
+          "/hostfs/etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
+          "/hostfs/var/lib/kubelet/config.yaml",
+          "/hostfs/var/lib/etcd",
+          "/hostfs/etc/kubernetes/pki"
       ]
 
     # =================================== Kibana ===================================
@@ -152,7 +149,6 @@ data:
 
       # Kibana Host
       host: "http://host.docker.internal:5601"
-      # Host url for kind k8s - for minikube change to  host.minikube.internal
     # =============================== Elastic Cloud ================================
 
     # These settings simplify using Kubebeat with the Elastic Cloud (https://cloud.elastic.co/).
@@ -169,16 +165,15 @@ data:
     # ---------------------------- Elasticsearch Output ----------------------------
     output.elasticsearch:
       # Array of hosts to connect to.
-      # Host url for kind k8s - for minikube change to  host.minikube.internal
-      hosts: ["host.docker.internal:9200"]
+      hosts: ${ES_HOST}
 
       # Protocol - either `http` (default) or `https`.
       #protocol: "https"
 
       # Authentication credentials - either API key or username/password.
       #api_key: "id:api_key"
-      username: "elastic"
-      password: "changeme"
+      username: ${ES_USERNAME}
+      password: ${ES_PASSWORD}
 
     # ================================= Processors =================================
     processors:
@@ -197,7 +192,6 @@ data:
 
     # Send all logging output to stderr. The default is false.
     logging.to_stderr: true
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -221,6 +215,8 @@ rules:
   - events
   - pods
   - services
+  - configmaps
+  - secrets
   verbs: ["get", "list", "watch"]
 # Enable this rule only if planing to use Kubernetes keystore
 #- apiGroups: [""]
@@ -236,11 +232,23 @@ rules:
   - statefulsets
   - deployments
   - replicasets
+  - daemonsets
   verbs: ["get", "list", "watch"]
 - apiGroups: ["batch"]
   resources:
   - jobs
   verbs: ["get", "list", "watch"]
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:

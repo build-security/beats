@@ -9,6 +9,11 @@ type Fetcher interface {
 	GetResourceID(resource interface{}) string
 }
 
+type FetcherCondition interface {
+	Condition() bool
+	Name() string
+}
+
 type FetcherResult struct {
 	ID       string      `json:"id"`
 	Type     string      `json:"type"`

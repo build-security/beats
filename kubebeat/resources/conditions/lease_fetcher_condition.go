@@ -1,6 +1,9 @@
 package conditions
 
-import "github.com/elastic/beats/v7/libbeat/logp"
+import (
+	"github.com/elastic/beats/v7/kubebeat/resources"
+	"github.com/elastic/beats/v7/libbeat/logp"
+)
 
 type LeaderLeaseProvider interface {
 	IsLeader() (bool, error)
@@ -10,7 +13,7 @@ type LeaseFetcherCondition struct {
 	provider LeaderLeaseProvider
 }
 
-func NewLeaseFetcherCondition(provider LeaderLeaseProvider) *LeaseFetcherCondition {
+func NewLeaseFetcherCondition(provider LeaderLeaseProvider) resources.FetcherCondition {
 	return &LeaseFetcherCondition{
 		provider: provider,
 	}

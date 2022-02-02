@@ -2,6 +2,10 @@ package conditions
 
 import "github.com/elastic/beats/v7/libbeat/logp"
 
+type LeaderLeaseProvider interface {
+	IsLeader() (bool, error)
+}
+
 type LeaseFetcherCondition struct {
 	provider LeaderLeaseProvider
 }

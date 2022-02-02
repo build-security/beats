@@ -16,20 +16,16 @@ const (
 	DefaultLeaderLeaseName = "elastic-agent-cluster-leader"
 )
 
-type LeaderLeaseProvider interface {
-	IsLeader() (bool, error)
-}
-
-type leaseInfo struct {
+type leaseProvider struct {
 	ctx    context.Context
 	client kubernetes.Interface
 }
 
-func NewLeaseInfo(ctx context.Context, client kubernetes.Interface) *leaseInfo {
-	return &leaseInfo{ctx, client}
+func NewLeaderLeaseProvider(ctx context.Context, client kubernetes.Interface) *leaseProvider {
+	return &leaseProvider{ctx, client}
 }
 
-func (l *leaseInfo) IsLeader() (bool, error) {
+func (l *leaseProvider) IsLeader() (bool, error) {
 	leases, err := l.client.CoordinationV1().Leases("kube-system").List(l.ctx, v1.ListOptions{})
 	if err != nil {
 		return false, err
@@ -50,7 +46,7 @@ func (l *leaseInfo) IsLeader() (bool, error) {
 	return false, fmt.Errorf("could not find lease %v in Kube leases", DefaultLeaderLeaseName)
 }
 
-func (l *leaseInfo) currentPodID() string {
+func (l *leaseProvider) currentPodID() string {
 	pod := os.Getenv(PodNameEnvar)
 
 	return lastPart(pod)

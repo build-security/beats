@@ -141,7 +141,7 @@ func InitRegistry(c config.Config) (resources.FetchersRegistry, error) {
 		return nil, err
 	}
 
-	leaseProvider := conditions.NewLeaseInfo(context.Background(), client)
+	leaseProvider := conditions.NewLeaderLeaseProvider(context.Background(), client)
 	condition := conditions.NewLeaseFetcherCondition(leaseProvider)
 
 	if err = registry.Register("kube_api", kubef, condition); err != nil {
@@ -153,7 +153,7 @@ func InitRegistry(c config.Config) (resources.FetchersRegistry, error) {
 	if err = registry.Register("file_system", fetchers.NewFileFetcher(c.Files)); err != nil {
 		return nil, err
 	}
-	
+
 	return registry, nil
 }
 

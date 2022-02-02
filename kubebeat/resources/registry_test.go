@@ -59,20 +59,20 @@ func registerNFetchers(t *testing.T, reg FetchersRegistry, n int) {
 	}
 }
 
-type RegistryTestSuit struct {
+type RegistryTestSuite struct {
 	suite.Suite
 	registry FetchersRegistry
 }
 
 func TestExampleTestSuite(t *testing.T) {
-	suite.Run(t, new(RegistryTestSuit))
+	suite.Run(t, new(RegistryTestSuite))
 }
 
-func (s *RegistryTestSuit) SetupTest() {
+func (s *RegistryTestSuite) SetupTest() {
 	s.registry = NewFetcherRegistry()
 }
 
-func (s *RegistryTestSuit) TestKeys() {
+func (s *RegistryTestSuite) TestKeys() {
 	var tests = []struct {
 		key   string
 		value int
@@ -102,7 +102,7 @@ func (s *RegistryTestSuit) TestKeys() {
 	s.Contains(keys, "new_fetcher")
 }
 
-func (s *RegistryTestSuit) TestRegisterDuplicateKey() {
+func (s *RegistryTestSuite) TestRegisterDuplicateKey() {
 	f := newNumberFetcher(1)
 	err := s.registry.Register("some-key", f)
 	s.NoError(err)
@@ -111,13 +111,13 @@ func (s *RegistryTestSuit) TestRegisterDuplicateKey() {
 	s.Error(err)
 }
 
-func (s *RegistryTestSuit) TestRegister10() {
+func (s *RegistryTestSuite) TestRegister10() {
 	count := 10
 	registerNFetchers(s.T(), s.registry, count)
 	s.Equal(count, len(s.registry.Keys()))
 }
 
-func (s *RegistryTestSuit) TestRunNotRegistered() {
+func (s *RegistryTestSuite) TestRunNotRegistered() {
 	f := newNumberFetcher(1)
 	err := s.registry.Register("some-key", f)
 	s.NoError(err)
@@ -127,7 +127,7 @@ func (s *RegistryTestSuit) TestRunNotRegistered() {
 	s.Empty(arr)
 }
 
-func (s *RegistryTestSuit) TestRunRegistered() {
+func (s *RegistryTestSuite) TestRunRegistered() {
 	f1 := newNumberFetcher(1)
 	err := s.registry.Register("some-key-1", f1)
 	s.NoError(err)
@@ -163,7 +163,7 @@ func (s *RegistryTestSuit) TestRunRegistered() {
 	}
 }
 
-func (s *RegistryTestSuit) TestShouldRunNotRegistered() {
+func (s *RegistryTestSuite) TestShouldRunNotRegistered() {
 	f := newNumberFetcher(1)
 	err := s.registry.Register("some-key", f)
 	s.NoError(err)
@@ -172,9 +172,9 @@ func (s *RegistryTestSuit) TestShouldRunNotRegistered() {
 	s.False(res)
 }
 
-func (s *RegistryTestSuit) TestShouldRun() {
+func (s *RegistryTestSuite) TestShouldRun() {
 	conditionTrue := newBoolFetcherCondition(true, "always-fetcher-condition")
-	conditionFlase := newBoolFetcherCondition(false, "never-fetcher-condition")
+	conditionFalse := newBoolFetcherCondition(false, "never-fetcher-condition")
 
 	var tests = []struct {
 		conditions []FetcherCondition
@@ -190,10 +190,10 @@ func (s *RegistryTestSuit) TestShouldRun() {
 			[]FetcherCondition{conditionTrue, conditionTrue}, true,
 		},
 		{
-			[]FetcherCondition{conditionTrue, conditionTrue, conditionFlase}, false,
+			[]FetcherCondition{conditionTrue, conditionTrue, conditionFalse}, false,
 		},
 		{
-			[]FetcherCondition{conditionFlase, conditionTrue, conditionTrue, conditionTrue, conditionTrue}, false,
+			[]FetcherCondition{conditionFalse, conditionTrue, conditionTrue, conditionTrue, conditionTrue}, false,
 		},
 	}
 

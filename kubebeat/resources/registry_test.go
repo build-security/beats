@@ -25,6 +25,10 @@ func (f *numberFetcher) Stop() {
 	f.stopCalled = true
 }
 
+func (f *numberFetcher) GetResourceID(resource interface{}) string {
+	return ""
+}
+
 type boolFetcherCondition struct {
 	val  bool
 	name string

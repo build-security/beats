@@ -31,6 +31,8 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 		assert.NotEmpty(t, event.Fields["result"], "event result is missing")
 		assert.NotEmpty(t, event.Fields["rule"], "event rule is missing")
 		assert.NotEmpty(t, event.Fields["resource"], "event resource is missing")
+		assert.NotEmpty(t, event.Fields["type"], "resource type is missing")
+		assert.NotEmpty(t, event.Fields["id"], "resource id is missing")
 	}
 }
 
@@ -89,7 +91,10 @@ var jsonExample = `{
 "mode": "700",
 "path": "/hostfs/etc/kubernetes/scheduler.conf",
 "type": "file-system",
-"uid": "root"
+"uid": "root",
+"inode": "8901"
 }
+"id": "8901",
+"type": "file-system"
 }
 `

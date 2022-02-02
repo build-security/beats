@@ -28,6 +28,7 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 	assert.Equal(t, files[0], resourceData.FileName)
 	assert.Equal(t, "600", resourceData.FileMode)
 	assert.NotNil(t, result.ID)
+	assert.NotNil(t, result.Type)
 }
 
 func TestFileFetcherFetchTwoPatterns(t *testing.T) {
@@ -75,6 +76,7 @@ func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
 	expectedResult := filepath.Base(dir)
 	assert.Equal(t, expectedResult, resourceData.FileName)
 	assert.NotNil(t, result.ID)
+	assert.NotNil(t, result.Type)
 }
 
 func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {
@@ -100,6 +102,7 @@ func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {
 		fileSystemDataResources := results[i].Resource.(resources.FileSystemResource)
 		assert.Contains(t, expectedResult, fileSystemDataResources.FileName)
 		assert.NotNil(t, results[i].ID)
+		assert.NotNil(t, results[i].Type)
 	}
 }
 
@@ -131,6 +134,7 @@ func TestFileFetcherFetchDirectoryRecursively(t *testing.T) {
 	for i := 0; i < len(results); i++ {
 		fileSystemDataResources := results[i].Resource.(resources.FileSystemResource)
 		assert.NotNil(t, results[i].ID)
+		assert.NotNil(t, results[i].Type)
 		assert.Contains(t, allFilesName, fileSystemDataResources.FileName)
 	}
 }

@@ -95,7 +95,11 @@ func (s *RegistryTestSuit) TestKeys() {
 		s.Equal(i+1, len(s.registry.Keys()))
 	}
 
-	s.Equal(s.registry.Keys(), []string{"some_fetcher", "other_fetcher", "new_fetcher"})
+	keys := s.registry.Keys()
+
+	s.Contains(keys, "some_fetcher")
+	s.Contains(keys, "other_fetcher")
+	s.Contains(keys, "new_fetcher")
 }
 
 func (s *RegistryTestSuit) TestRegisterDuplicateKey() {

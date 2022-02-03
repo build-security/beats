@@ -1,11 +1,13 @@
 package fetchers
 
 import (
-	"github.com/elastic/beats/v7/kubebeat/resources"
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/elastic/beats/v7/kubebeat/resources"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +20,7 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 
 	filePaths := []string{filepath.Join(dir, files[0])}
 	fileFetcher := NewFileFetcher(filePaths)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
@@ -39,7 +41,7 @@ func TestFileFetcherFetchTwoPatterns(t *testing.T) {
 
 	path := []string{filepath.Join(outerDir, outerFiles[0]), filepath.Join(outerDir, outerFiles[1])}
 	fileFetcher := NewFileFetcher(path)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 2, len(results))
@@ -65,7 +67,7 @@ func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
 
 	filePaths := []string{filepath.Join(dir)}
 	fileFetcher := NewFileFetcher(filePaths)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
@@ -91,7 +93,7 @@ func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {
 
 	path := []string{outerDir + "/*"}
 	fileFetcher := NewFileFetcher(path)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 2, len(results))
@@ -122,7 +124,7 @@ func TestFileFetcherFetchDirectoryRecursively(t *testing.T) {
 
 	path := []string{outerDir + "/**"}
 	fileFetcher := NewFileFetcher(path)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 6, len(results))

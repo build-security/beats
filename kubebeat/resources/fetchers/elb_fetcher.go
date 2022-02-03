@@ -23,9 +23,9 @@ func NewELBFetcher(cfg aws.Config, loadBalancersNames []string) (resources.Fetch
 	}, nil
 }
 
-func (f ELBFetcher) Fetch() ([]resources.FetcherResult, error) {
+func (f ELBFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
-	ctx := context.Background()
+
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.lbNames)
 	resourceID := f.GetResourceID(result)
 	results = append(results, resources.FetcherResult{ID: resourceID, Type: ELBType, Resource: result})

@@ -11,7 +11,7 @@ import (
 // Todo add consts as configurable vars from integration package - add datastream struct
 const DefaultNamespace = "default"
 
-const ResultsDatastreamIndexPrefix = "logs-k8s_cis.result"
+const ResultsDatastreamIndexPrefix = "logs-k8s_cis.findings"
 const MetadataDatastreamIndexPrefix = ".logs-k8s_cis.metadata"
 
 type Config struct {

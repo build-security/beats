@@ -142,7 +142,7 @@ func (f *KubeFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, err
 		return nil, fmt.Errorf("could not initate Kubernetes watchers: %w", err)
 	}
 
-	return GetKubeData(f.watchers)
+	return GetKubeData(f.watchers), nil
 }
 
 func (f *KubeFetcher) Stop() {

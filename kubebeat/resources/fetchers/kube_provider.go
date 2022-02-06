@@ -6,7 +6,7 @@ import (
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
-func GetKubeData(watchers []kubernetes.Watcher) ([]resources.FetcherResult, error) {
+func GetKubeData(watchers []kubernetes.Watcher) []resources.FetcherResult {
 	ret := make([]resources.FetcherResult, 0)
 
 	for _, watcher := range watchers {
@@ -23,7 +23,8 @@ func GetKubeData(watchers []kubernetes.Watcher) ([]resources.FetcherResult, erro
 
 			err := addTypeInformationToKubeResource(resource)
 			if err != nil {
-				return nil, err
+				logp.L().Errorf("Bad resource: %w", err)
+				continue
 			} // See https://github.com/kubernetes/kubernetes/issues/3030
 
 			ret = append(ret, resources.FetcherResult{
@@ -33,7 +34,7 @@ func GetKubeData(watchers []kubernetes.Watcher) ([]resources.FetcherResult, erro
 		}
 	}
 
-	return ret, nil
+	return ret
 }
 
 // nullifyManagedFields ManagedFields field contains fields with dot that prevent from elasticsearch to index

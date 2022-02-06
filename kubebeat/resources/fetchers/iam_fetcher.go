@@ -15,6 +15,7 @@ type IAMFetcher struct {
 }
 
 type IAMFetcherConfig struct {
+	resources.BaseFetcherConfig
 	RoleName string `config:"roleName"`
 }
 

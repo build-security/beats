@@ -15,6 +15,7 @@ type EKSFetcher struct {
 }
 
 type EKSFetcherConfig struct {
+	resources.BaseFetcherConfig
 	ClusterName string `config:"clusterName"`
 }
 

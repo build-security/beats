@@ -15,6 +15,7 @@ type ECRFetcher struct {
 }
 
 type ECRFetcherConfig struct {
+	resources.BaseFetcherConfig
 }
 
 func NewECRFetcher(awsCfg aws.Config, cfg ECRFetcherConfig) (resources.Fetcher, error) {

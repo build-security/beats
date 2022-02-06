@@ -16,7 +16,7 @@ type ELBFetcher struct {
 
 type ELBFetcherConfig struct {
 	resources.BaseFetcherConfig
-	lbNames []string `config:"loadBalancers"`
+	LoadBalancerNames []string `config:"loadBalancers"`
 }
 
 func NewELBFetcher(awsCfg aws.Config, cfg ELBFetcherConfig) (resources.Fetcher, error) {
@@ -28,10 +28,10 @@ func NewELBFetcher(awsCfg aws.Config, cfg ELBFetcherConfig) (resources.Fetcher, 
 	}, nil
 }
 
-func (f ELBFetcher) Fetch() ([]resources.FetcherResult, error) {
+func (f ELBFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
-	ctx := context.Background()
-	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.cfg.lbNames)
+
+	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.cfg.LoadBalancerNames)
 	results = append(results, resources.FetcherResult{
 		Type:     ELBType,
 		Resource: result,

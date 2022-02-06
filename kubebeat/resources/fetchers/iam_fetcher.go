@@ -27,9 +27,9 @@ func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (resources.Fetcher, 
 	}, nil
 }
 
-func (f IAMFetcher) Fetch() ([]resources.FetcherResult, error) {
+func (f IAMFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
-	ctx := context.Background()
+
 	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.cfg.RoleName)
 	results = append(results, resources.FetcherResult{
 		Type:     IAMType,

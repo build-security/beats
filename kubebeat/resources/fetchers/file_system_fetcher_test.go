@@ -1,6 +1,7 @@
 package fetchers
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,9 +19,11 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	filePaths := []string{filepath.Join(dir, files[0])}
-	cfg := FileFetcherConfig{Patterns: filePaths}
+	cfg := FileFetcherConfig{
+		Patterns: filePaths,
+	}
 	fileFetcher := NewFileFetcher(cfg)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
@@ -37,9 +40,11 @@ func TestFileFetcherFetchTwoPatterns(t *testing.T) {
 	defer os.RemoveAll(outerDir)
 
 	path := []string{filepath.Join(outerDir, outerFiles[0]), filepath.Join(outerDir, outerFiles[1])}
-	cfg := FileFetcherConfig{Patterns: path}
+	cfg := FileFetcherConfig{
+		Patterns: path,
+	}
 	fileFetcher := NewFileFetcher(cfg)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 2, len(results))
@@ -60,9 +65,11 @@ func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	filePaths := []string{filepath.Join(dir)}
-	cfg := FileFetcherConfig{Patterns: filePaths}
+	cfg := FileFetcherConfig{
+		Patterns: filePaths,
+	}
 	fileFetcher := NewFileFetcher(cfg)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
@@ -83,9 +90,11 @@ func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {
 	innerDir := createDirectoriesWithFiles(t, outerDir, innerDirectoryName, innerFiles)
 
 	path := []string{outerDir + "/*"}
-	cfg := FileFetcherConfig{Patterns: path}
+	cfg := FileFetcherConfig{
+		Patterns: path,
+	}
 	fileFetcher := NewFileFetcher(cfg)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 2, len(results))
@@ -113,9 +122,11 @@ func TestFileFetcherFetchDirectoryRecursively(t *testing.T) {
 	innerInnerDir := createDirectoriesWithFiles(t, innerDir, innerInnerDirectoryName, innerInnerFiles)
 
 	path := []string{outerDir + "/**"}
-	cfg := FileFetcherConfig{Patterns: path}
+	cfg := FileFetcherConfig{
+		Patterns: path,
+	}
 	fileFetcher := NewFileFetcher(cfg)
-	results, err := fileFetcher.Fetch()
+	results, err := fileFetcher.Fetch(context.TODO())
 
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 6, len(results))

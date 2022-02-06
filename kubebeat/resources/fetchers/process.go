@@ -1,6 +1,8 @@
 package fetchers
 
 import (
+	"context"
+
 	"github.com/elastic/beats/v7/kubebeat/resources"
 	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/pkg/proc"
 )
@@ -24,7 +26,7 @@ func NewProcessesFetcher(cfg ProcessFetcherConfig) resources.Fetcher {
 	}
 }
 
-func (f *ProcessesFetcher) Fetch() ([]resources.FetcherResult, error) {
+func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
 	pids, err := proc.List(f.cfg.Directory)
 	if err != nil {
 		return nil, err

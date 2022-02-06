@@ -1,6 +1,7 @@
 package fetchers
 
 import (
+	"context"
 	"os"
 	"os/user"
 	"strconv"
@@ -32,7 +33,7 @@ func NewFileFetcher(cfg FileFetcherConfig) resources.Fetcher {
 	}
 }
 
-func (f *FileSystemFetcher) Fetch() ([]resources.FetcherResult, error) {
+func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 
 	// Input files might contain glob pattern

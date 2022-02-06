@@ -11,22 +11,26 @@ const IAMType = "aws-iam"
 
 type IAMFetcher struct {
 	iamProvider *IAMProvider
-	roleName    string
+	cfg         IAMFetcherConfig
 }
 
-func NewIAMFetcher(cfg aws.Config, roleName string) (resources.Fetcher, error) {
-	iam := NewIAMProvider(cfg)
+type IAMFetcherConfig struct {
+	RoleName string `config:"roleName"`
+}
+
+func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (resources.Fetcher, error) {
+	iam := NewIAMProvider(awsCfg)
 
 	return &IAMFetcher{
+		cfg:         cfg,
 		iamProvider: iam,
-		roleName:    roleName,
 	}, nil
 }
 
 func (f IAMFetcher) Fetch() ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 	ctx := context.Background()
-	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.roleName)
+	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.cfg.RoleName)
 	results = append(results, resources.FetcherResult{
 		Type:     IAMType,
 		Resource: result,

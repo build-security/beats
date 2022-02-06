@@ -10,13 +10,18 @@ import (
 const ECRType = "aws-ecr"
 
 type ECRFetcher struct {
+	cfg         ECRFetcherConfig
 	ecrProvider *ECRProvider
 }
 
-func NewECRFetcher(cfg aws.Config) (resources.Fetcher, error) {
-	ecr := NewEcrProvider(cfg)
+type ECRFetcherConfig struct {
+}
+
+func NewECRFetcher(awsCfg aws.Config, cfg ECRFetcherConfig) (resources.Fetcher, error) {
+	ecr := NewEcrProvider(awsCfg)
 
 	return &ECRFetcher{
+		cfg:         cfg,
 		ecrProvider: ecr,
 	}, nil
 }

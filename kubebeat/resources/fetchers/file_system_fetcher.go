@@ -14,16 +14,21 @@ import (
 // The FileSystemFetcher meant to fetch file/directories from the file system and ship it
 // to the Kubebeat
 type FileSystemFetcher struct {
-	inputFilePatterns []string // Files and directories paths for the fetcher to extract info from
+	cfg FileFetcherConfig
+}
+
+type FileFetcherConfig struct {
+	resources.BaseFetcherConfig
+	Patterns []string `config:"patterns"` // Files and directories paths for the fetcher to extract info from
 }
 
 const (
 	FileSystemType = "file-system"
 )
 
-func NewFileFetcher(filesPaths []string) resources.Fetcher {
+func NewFileFetcher(cfg FileFetcherConfig) resources.Fetcher {
 	return &FileSystemFetcher{
-		inputFilePatterns: filesPaths,
+		cfg: cfg,
 	}
 }
 
@@ -31,7 +36,7 @@ func (f *FileSystemFetcher) Fetch() ([]resources.FetcherResult, error) {
 	results := make([]resources.FetcherResult, 0)
 
 	// Input files might contain glob pattern
-	for _, filePattern := range f.inputFilePatterns {
+	for _, filePattern := range f.cfg.Patterns {
 		matchedFiles, err := Glob(filePattern)
 		if err != nil {
 			logp.Err("Failed to find matched glob for %s, error - %+v", filePattern, err)
@@ -48,7 +53,6 @@ func (f *FileSystemFetcher) Fetch() ([]resources.FetcherResult, error) {
 }
 
 func (f *FileSystemFetcher) fetchSystemResource(filePath string) interface{} {
-
 	info, err := os.Stat(filePath)
 	if err != nil {
 		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
@@ -60,7 +64,6 @@ func (f *FileSystemFetcher) fetchSystemResource(filePath string) interface{} {
 }
 
 func FromFileInfo(info os.FileInfo, path string) resources.FileSystemResource {
-
 	if info == nil {
 		return resources.FileSystemResource{}
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/kubebeat/resources"
 )
 
 const ECRType = "aws-ecr"
@@ -13,7 +12,11 @@ type ECRFetcher struct {
 	ecrProvider *ECRProvider
 }
 
-func NewECRFetcher(cfg aws.Config) (resources.Fetcher, error) {
+type ECRFetchResult struct {
+	obj interface{}
+}
+
+func NewECRFetcher(cfg aws.Config) (Fetcher, error) {
 	ecr := NewEcrProvider(cfg)
 
 	return &ECRFetcher{
@@ -21,13 +24,12 @@ func NewECRFetcher(cfg aws.Config) (resources.Fetcher, error) {
 	}, nil
 }
 
-func (f ECRFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
-	results := make([]resources.FetcherResult, 0)
+func (f ECRFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+	results := make([]FetcherResult, 0)
 
 	// TODO - The provider should get a list of the repositories it needs to check, and not check the entire ECR account`
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
-	resourceID := f.GetResourceID(repositories)
-	results = append(results, resources.FetcherResult{ID: resourceID, Type: ECRType, Resource: repositories})
+	results = append(results, &ECRFetchResult{repositories})
 
 	return results, err
 }
@@ -35,6 +37,6 @@ func (f ECRFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error
 func (f ECRFetcher) Stop() {
 }
 
-func (f ECRFetcher) GetResourceID(resource interface{}) string {
+func (res ECRFetchResult) GetID() string {
 	return ""
 }

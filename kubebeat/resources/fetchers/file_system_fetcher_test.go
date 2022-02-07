@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/elastic/beats/v7/kubebeat/resources"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +24,7 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 	assert.Equal(t, 1, len(results))
 
 	result := results[0]
-	resourceData := result.Resource.(resources.FileSystemResource)
+	resourceData := result.Resource.(FileSystemResource)
 	assert.Equal(t, files[0], resourceData.FileName)
 	assert.Equal(t, "600", resourceData.FileMode)
 	assert.NotNil(t, result.ID)
@@ -47,13 +45,13 @@ func TestFileFetcherFetchTwoPatterns(t *testing.T) {
 	assert.Equal(t, 2, len(results))
 
 	firstResult := results[0]
-	firstResourceData := firstResult.Resource.(resources.FileSystemResource)
+	firstResourceData := firstResult.Resource.(FileSystemResource)
 	assert.Equal(t, outerFiles[0], firstResourceData.FileName)
 	assert.Equal(t, "600", firstResourceData.FileMode)
 	assert.NotNil(t, firstResult.ID)
 
 	secResult := results[1]
-	secResourceData := secResult.Resource.(resources.FileSystemResource)
+	secResourceData := secResult.Resource.(FileSystemResource)
 	assert.Equal(t, outerFiles[1], secResourceData.FileName)
 	assert.Equal(t, "600", secResourceData.FileMode)
 	assert.NotNil(t, secResult.ID)
@@ -73,7 +71,7 @@ func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
 	assert.Equal(t, 1, len(results))
 
 	result := results[0]
-	resourceData := result.Resource.(resources.FileSystemResource)
+	resourceData := result.Resource.(FileSystemResource)
 
 	expectedResult := filepath.Base(dir)
 	assert.Equal(t, expectedResult, resourceData.FileName)
@@ -101,7 +99,7 @@ func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {
 	//All inner files should exist in the final result
 	expectedResult := []string{"output.txt", filepath.Base(innerDir)}
 	for i := 0; i < len(results); i++ {
-		fileSystemDataResources := results[i].Resource.(resources.FileSystemResource)
+		fileSystemDataResources := results[i].Resource.(FileSystemResource)
 		assert.Contains(t, expectedResult, fileSystemDataResources.FileName)
 		assert.NotNil(t, results[i].ID)
 		assert.NotNil(t, results[i].Type)
@@ -134,7 +132,7 @@ func TestFileFetcherFetchDirectoryRecursively(t *testing.T) {
 
 	//All inner files should exist in the final result
 	for i := 0; i < len(results); i++ {
-		fileSystemDataResources := results[i].Resource.(resources.FileSystemResource)
+		fileSystemDataResources := results[i].Resource.(FileSystemResource)
 		assert.NotNil(t, results[i].ID)
 		assert.NotNil(t, results[i].Type)
 		assert.Contains(t, allFilesName, fileSystemDataResources.FileName)

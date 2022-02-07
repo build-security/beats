@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/elastic/beats/v7/kubebeat/resources"
+	"github.com/elastic/beats/v7/kubebeat/resources/fetchers"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -31,7 +32,7 @@ func (c *Constructor) ProcessOutput(ctx context.Context, client beat.Client, o r
 	}
 }
 
-func (c *Constructor) processResources(ctx context.Context, client beat.Client, results []resources.FetcherResult, metadata ResourceTypeMetadata) {
+func (c *Constructor) processResources(ctx context.Context, client beat.Client, results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
 	for _, result := range results {
 		events, err := c.createBeatEvents(ctx, result, ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.GetID()})
 		if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/kubebeat/resources"
 )
 
 const EKSType = "aws-eks"
@@ -14,7 +13,11 @@ type EKSFetcher struct {
 	clusterName string
 }
 
-func NewEKSFetcher(cfg aws.Config, clusterName string) (resources.Fetcher, error) {
+type EKSFetchResult struct {
+	obj interface{}
+}
+
+func NewEKSFetcher(cfg aws.Config, clusterName string) (Fetcher, error) {
 	eks := NewEksProvider(cfg)
 
 	return &EKSFetcher{
@@ -23,12 +26,11 @@ func NewEKSFetcher(cfg aws.Config, clusterName string) (resources.Fetcher, error
 	}, nil
 }
 
-func (f EKSFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
-	results := make([]resources.FetcherResult, 0)
+func (f EKSFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+	results := make([]FetcherResult, 0)
 
 	result, err := f.eksProvider.DescribeCluster(ctx, f.clusterName)
-	resourceID := f.GetResourceID(result)
-	results = append(results, resources.FetcherResult{ID: resourceID, Type: EKSType, Resource: result})
+	results = append(results, &EKSFetchResult{result})
 
 	return results, err
 }
@@ -36,6 +38,6 @@ func (f EKSFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error
 func (f EKSFetcher) Stop() {
 }
 
-func (f EKSFetcher) GetResourceID(resource interface{}) string {
+func (res EKSFetchResult) GetID() string {
 	return ""
 }

@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/elastic/beats/v7/kubebeat/resources/fetchers"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,11 +15,11 @@ type numberFetcher struct {
 	stopCalled bool
 }
 
-func newNumberFetcher(num int) Fetcher {
+func newNumberFetcher(num int) fetchers.Fetcher {
 	return &numberFetcher{num, false}
 }
 
-func (f *numberFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+func (f *numberFetcher) Fetch(ctx context.Context) ([]fetchers.FetcherResult, error) {
 	return fetchValue(f.num), nil
 }
 
@@ -35,7 +36,7 @@ type boolFetcherCondition struct {
 	name string
 }
 
-func newBoolFetcherCondition(val bool, name string) FetcherCondition {
+func newBoolFetcherCondition(val bool, name string) fetchers.FetcherCondition {
 	return &boolFetcherCondition{val, name}
 }
 
@@ -47,8 +48,8 @@ func (c *boolFetcherCondition) Name() string {
 	return c.name
 }
 
-func fetchValue(num int) []FetcherResult {
-	return []FetcherResult{
+func fetchValue(num int) []fetchers.FetcherResult {
+	return []fetchers.FetcherResult{
 		{
 			Type:     "number",
 			Resource: num,
@@ -182,23 +183,23 @@ func (s *RegistryTestSuite) TestShouldRun() {
 	conditionFalse := newBoolFetcherCondition(false, "never-fetcher-condition")
 
 	var tests = []struct {
-		conditions []FetcherCondition
+		conditions []fetchers.FetcherCondition
 		expected   bool
 	}{
 		{
-			[]FetcherCondition{}, true,
+			[]fetchers.FetcherCondition{}, true,
 		},
 		{
-			[]FetcherCondition{conditionTrue}, true,
+			[]fetchers.FetcherCondition{conditionTrue}, true,
 		},
 		{
-			[]FetcherCondition{conditionTrue, conditionTrue}, true,
+			[]fetchers.FetcherCondition{conditionTrue, conditionTrue}, true,
 		},
 		{
-			[]FetcherCondition{conditionTrue, conditionTrue, conditionFalse}, false,
+			[]fetchers.FetcherCondition{conditionTrue, conditionTrue, conditionFalse}, false,
 		},
 		{
-			[]FetcherCondition{conditionFalse, conditionTrue, conditionTrue, conditionTrue, conditionTrue}, false,
+			[]fetchers.FetcherCondition{conditionFalse, conditionTrue, conditionTrue, conditionTrue, conditionTrue}, false,
 		},
 	}
 

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/elastic/beats/v7/kubebeat/resources"
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 
@@ -81,7 +80,7 @@ type kubeFetchResult struct {
 	o runtime.Object
 }
 
-func NewKubeFetcher(kubeconfig string, interval time.Duration) (resources.Fetcher, error) {
+func NewKubeFetcher(kubeconfig string, interval time.Duration) (Fetcher, error) {
 	f := &KubeFetcher{
 		kubeconfig: kubeconfig,
 		interval:   interval,
@@ -138,7 +137,7 @@ func (f *KubeFetcher) initWatchers() error {
 	return nil
 }
 
-func (f *KubeFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
+func (f *KubeFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 	var err error
 	watcherlock.Do(func() {
 		err = f.initWatchers()
@@ -149,7 +148,7 @@ func (f *KubeFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, err
 		return nil, fmt.Errorf("could not initate Kubernetes watchers: %w", err)
 	}
 
-	ret := make([]resources.FetcherResult, 0)
+	ret := make([]FetcherResult, 0)
 
 	for _, w := range f.watchers {
 		rs := w.Store().List()
@@ -176,8 +175,8 @@ func (f *KubeFetcher) Stop() {
 	}
 }
 
-func (obj kubeFetchResult) GetID() string {
-	accessor, err := meta.Accessor(obj)
+func (res kubeFetchResult) GetID() string {
+	accessor, err := meta.Accessor(res.o)
 	if err != nil {
 		// Some err occur while trying to get metadata - return obj without id
 		fmt.Errorf("missing required metadata fields; %w", err)

@@ -1,8 +1,7 @@
-package resources
+package fetchers
 
 import (
 	"context"
-
 	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/pkg/proc"
 )
 
@@ -20,12 +19,6 @@ type FetcherCondition interface {
 type FetcherResult interface {
 	GetID() string
 }
-
-//type FetcherResult struct {
-//	ID       string      `json:"id"`
-//	Type     string      `json:"type"`
-//	Resource interface{} `json:"resource"`
-//}
 
 type FileSystemResource struct {
 	FileName string `json:"filename"`

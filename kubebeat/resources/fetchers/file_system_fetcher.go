@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/elastic/beats/v7/kubebeat/resources"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
@@ -22,14 +21,14 @@ const (
 	FileSystemType = "file-system"
 )
 
-func NewFileFetcher(filesPaths []string) resources.Fetcher {
+func NewFileFetcher(filesPaths []string) Fetcher {
 	return &FileSystemFetcher{
 		inputFilePatterns: filesPaths,
 	}
 }
 
-func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
-	results := make([]resources.FetcherResult, 0)
+func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+	results := make([]FetcherResult, 0)
 
 	// Input files might contain glob pattern
 	for _, filePattern := range f.inputFilePatterns {
@@ -39,40 +38,34 @@ func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]resources.FetcherResul
 		}
 		for _, file := range matchedFiles {
 			resourceInfo := f.fetchSystemResource(file)
-			resourceID := f.GetResourceID(resourceInfo)
-
-			results = append(results, resources.FetcherResult{
-				ID:       resourceID,
-				Type:     FileSystemType,
-				Resource: resourceInfo,
-			})
+			results = append(results, resourceInfo)
 		}
 	}
 	return results, nil
 }
 
-func (f *FileSystemFetcher) fetchSystemResource(filePath string) resources.FileSystemResource {
+func (f *FileSystemFetcher) fetchSystemResource(filePath string) FileSystemResource {
 
 	info, err := os.Stat(filePath)
 	if err != nil {
 		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
-		return resources.FileSystemResource{}
+		return FileSystemResource{}
 	}
 	resourceInfo := FromFileInfo(info, filePath)
 
 	return resourceInfo
 }
 
-func FromFileInfo(info os.FileInfo, path string) resources.FileSystemResource {
+func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
 
 	if info == nil {
-		return resources.FileSystemResource{}
+		return FileSystemResource{}
 	}
 
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		logp.Err("Not a syscall.Stat_t")
-		return resources.FileSystemResource{}
+		return FileSystemResource{}
 	}
 
 	uid := stat.Uid
@@ -84,7 +77,7 @@ func FromFileInfo(info os.FileInfo, path string) resources.FileSystemResource {
 	mod := strconv.FormatUint(uint64(info.Mode().Perm()), 8)
 	inode := strconv.FormatUint(uint64(stat.Ino), 10)
 
-	data := resources.FileSystemResource{
+	data := FileSystemResource{
 		FileName: info.Name(),
 		FileMode: mod,
 		Uid:      usr.Name,
@@ -99,7 +92,6 @@ func FromFileInfo(info os.FileInfo, path string) resources.FileSystemResource {
 func (f *FileSystemFetcher) Stop() {
 }
 
-func (f *FileSystemFetcher) GetResourceID(resource interface{}) string {
-	fsResource := resource.(resources.FileSystemResource)
-	return fsResource.Inode
+func (res FileSystemResource) GetID() string {
+	return res.Inode
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"github.com/elastic/beats/v7/kubebeat/resources/fetchers"
 	"sync"
 	"time"
 
@@ -22,7 +23,7 @@ type Data struct {
 	wg       *sync.WaitGroup
 }
 
-type Map map[string][]FetcherResult
+type Map map[string][]fetchers.FetcherResult
 
 // NewData returns a new Data instance with the given interval.
 func NewData(interval time.Duration, fetchers FetchersRegistry) (*Data, error) {
@@ -67,7 +68,7 @@ func (d *Data) Run(ctx context.Context) error {
 // update is a single update sent from a worker to a manager.
 type update struct {
 	key string
-	val []FetcherResult
+	val []fetchers.FetcherResult
 }
 
 func (d *Data) fetchWorker(ctx context.Context, updates chan update, k string) {
@@ -146,9 +147,8 @@ func copyState(m Map) (Map, error) {
 
 func init() {
 	gob.Register([]interface{}{})
-	gob.Register(FetcherResult{})
-	gob.Register(ProcessResource{})
-	gob.Register(FileSystemResource{})
+	gob.Register(fetchers.ProcessResource{})
+	gob.Register(fetchers.FileSystemResource{})
 	gob.Register(kubernetes.Pod{})
 	gob.Register(kubernetes.Secret{})
 	gob.Register(kubernetes.Role{})

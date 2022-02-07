@@ -7,11 +7,10 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/elastic/beats/v7/cloudbeat/resources"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
-// FileSystemFetcher implement the resources.Fetcher interface
+// FileSystemFetcher implement the Fetcher interface
 // The FileSystemFetcher meant to fetch file/directories from the file system and ship it
 // to the Cloudbeat
 type FileSystemFetcher struct {
@@ -19,7 +18,7 @@ type FileSystemFetcher struct {
 }
 
 type FileFetcherConfig struct {
-	resources.BaseFetcherConfig
+	BaseFetcherConfig
 	Patterns []string `config:"patterns"` // Files and directories paths for the fetcher to extract info from
 }
 
@@ -27,7 +26,7 @@ const (
 	FileSystemType = "file-system"
 )
 
-func NewFileFetcher(cfg FileFetcherConfig) resources.Fetcher {
+func NewFileFetcher(cfg FileFetcherConfig) Fetcher {
 	return &FileSystemFetcher{
 		cfg: cfg,
 	}
@@ -43,8 +42,11 @@ func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) 
 			logp.Err("Failed to find matched glob for %s, error - %+v", filePattern, err)
 		}
 		for _, file := range matchedFiles {
-			resourceInfo := f.fetchSystemResource(file)
-			results = append(results, resourceInfo)
+			resource := f.fetchSystemResource(file)
+			results = append(results, FetcherResult{
+				Type:     FileSystemType,
+				Resource: resource,
+			})
 		}
 	}
 	return results, nil

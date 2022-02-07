@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
-	"github.com/elastic/beats/v7/kubebeat/resources/fetchers"
+	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
 	"sync"
 	"time"
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 )
 
 const ECRType = "aws-ecr"
@@ -18,7 +18,12 @@ type ECRFetcherConfig struct {
 	BaseFetcherConfig
 }
 
-func NewECRFetcher(awsCfg aws.Config, cfg ECRFetcherConfig) (resources.Fetcher, error) {
+type ecrRepos []ecr.Repository
+type ECRResource struct {
+	ecrRepos
+}
+
+func NewECRFetcher(awsCfg aws.Config, cfg ECRFetcherConfig) (Fetcher, error) {
 	ecr := NewEcrProvider(awsCfg)
 
 	return &ECRFetcher{
@@ -34,11 +39,16 @@ func (f ECRFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
 	results = append(results, FetcherResult{
 		Type:     ECRType,
-		Resource: repositories,
+		Resource: ECRResource{repositories},
 	})
 
 	return results, err
 }
+
+func (res ECRResource) GetID() string {
+	return ""
+}
+
 
 func (f ECRFetcher) Stop() {
 }

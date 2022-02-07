@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 )
 
 const ELBType = "aws-elb"
@@ -15,8 +15,13 @@ type ELBFetcher struct {
 }
 
 type ELBFetcherConfig struct {
-	resources.BaseFetcherConfig
+	BaseFetcherConfig
 	LoadBalancerNames []string `config:"loadBalancers"`
+}
+
+type ELBDesc []elasticloadbalancing.LoadBalancerDescription
+type ELBResource struct {
+	ELBDesc
 }
 
 func NewELBFetcher(awsCfg aws.Config, cfg ELBFetcherConfig) (Fetcher, error) {
@@ -28,13 +33,13 @@ func NewELBFetcher(awsCfg aws.Config, cfg ELBFetcherConfig) (Fetcher, error) {
 	}, nil
 }
 
-func (f ELBFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error) {
-	results := make([]resources.FetcherResult, 0)
+func (f ELBFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+	results := make([]FetcherResult, 0)
 
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.cfg.LoadBalancerNames)
 	results = append(results, FetcherResult{
 		Type:     ELBType,
-		Resource: result,
+		Resource: ELBResource{result},
 	})
 
 	return results, err
@@ -43,6 +48,6 @@ func (f ELBFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, error
 func (f ELBFetcher) Stop() {
 }
 
-func (res ELBFetchResult) GetID() string {
+func (res ELBResource) GetID() string {
 	return ""
 }

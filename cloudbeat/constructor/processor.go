@@ -3,8 +3,8 @@ package constructor
 import (
 	"context"
 	"fmt"
-	"github.com/elastic/beats/v7/kubebeat/resources"
-	"github.com/elastic/beats/v7/kubebeat/resources/fetchers"
+	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -34,7 +34,7 @@ func (c *Constructor) ProcessOutput(ctx context.Context, client beat.Client, o r
 
 func (c *Constructor) processResources(ctx context.Context, client beat.Client, results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
 	for _, result := range results {
-		events, err := c.createBeatEvents(ctx, result, ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.GetID()})
+		events, err := c.createBeatEvents(ctx, result, ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.Resource.GetID()})
 		if err != nil {
 			fmt.Errorf("failed to create beat events for, %v, Error: %v", metadata, err)
 		}

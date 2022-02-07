@@ -16,8 +16,13 @@ type FetcherCondition interface {
 	Name() string
 }
 
-type FetcherResult interface {
+type PolicyResource interface {
 	GetID() string
+}
+
+type FetcherResult struct {
+	Type     string         `json:"type"`
+	Resource PolicyResource `json:"resource"`
 }
 
 type FileSystemResource struct {
@@ -33,4 +38,8 @@ type ProcessResource struct {
 	PID  string        `json:"pid"`
 	Cmd  string        `json:"command"`
 	Stat proc.ProcStat `json:"stat"`
+}
+
+type BaseFetcherConfig struct {
+	Fetcher string `config:"fetcher"`
 }

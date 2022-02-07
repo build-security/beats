@@ -3,7 +3,6 @@ package fetchers
 import (
 	"context"
 
-	"github.com/elastic/beats/v7/cloudbeat/resources"
 	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/pkg/proc"
 )
 
@@ -27,7 +26,7 @@ func NewProcessesFetcher(cfg ProcessFetcherConfig) Fetcher {
 }
 
 func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
-	pids, err := proc.List(f.directory)
+	pids, err := proc.List(f.cfg.Directory)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +46,10 @@ func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 			return ret, nil
 		}
 
-		resourceObj := ProcessResource{PID: p, Cmd: cmd, Stat: stat}
-		ret = append(ret, resourceObj)
+		ret = append(ret, FetcherResult{
+			Type:     ProcessType,
+			Resource: ProcessResource{PID: p, Cmd: cmd, Stat: stat},
+		})
 	}
 
 	return ret, nil

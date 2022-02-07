@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/cloudbeat/resources"
 )
 
 const IAMType = "aws-iam"
@@ -15,11 +14,15 @@ type IAMFetcher struct {
 }
 
 type IAMFetcherConfig struct {
-	resources.BaseFetcherConfig
+	BaseFetcherConfig
 	RoleName string `config:"roleName"`
 }
 
-func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (resources.Fetcher, error) {
+type IAMResource struct {
+	res interface{}
+}
+
+func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (Fetcher, error) {
 	iam := NewIAMProvider(awsCfg)
 
 	return &IAMFetcher{
@@ -31,8 +34,11 @@ func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (resources.Fetcher, 
 func (f IAMFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 	results := make([]FetcherResult, 0)
 
-	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.roleName)
-	results = append(results, IAMFetchResult{result})
+	result, err := f.iamProvider.GetIAMRolePermissions(ctx, f.cfg.RoleName)
+	results = append(results, FetcherResult{
+		Type:     IAMType,
+		Resource: IAMResource{result},
+	})
 
 	return results, err
 }
@@ -40,6 +46,6 @@ func (f IAMFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 func (f IAMFetcher) Stop() {
 }
 
-func (res IAMFetchResult) GetID() string {
+func (res IAMResource) GetID() string {
 	return ""
 }

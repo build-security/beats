@@ -1,13 +1,19 @@
 package fetchers
 
 import (
-	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"fmt"
+
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-func GetKubeData(watchers []kubernetes.Watcher) []resources.FetcherResult {
-	ret := make([]resources.FetcherResult, 0)
+type ExtK8sResource struct {
+	kubernetes.Resource
+}
+
+func GetKubeData(watchers []kubernetes.Watcher) []FetcherResult {
+	ret := make([]FetcherResult, 0)
 
 	for _, watcher := range watchers {
 		rs := watcher.Store().List()
@@ -27,14 +33,26 @@ func GetKubeData(watchers []kubernetes.Watcher) []resources.FetcherResult {
 				continue
 			} // See https://github.com/kubernetes/kubernetes/issues/3030
 
-			ret = append(ret, resources.FetcherResult{
+			ret = append(ret, FetcherResult{
 				Type:     KubeAPIType,
-				Resource: resource,
+				Resource: ExtK8sResource{resource},
 			})
 		}
 	}
 
 	return ret
+}
+
+func (res ExtK8sResource) GetID() string {
+	accessor, err := meta.Accessor(res)
+	if err != nil {
+		// Some err occur while trying to get metadata - return obj without id
+		fmt.Errorf("missing required metadata fields; %w", err)
+		return ""
+	}
+
+	uid := accessor.GetUID()
+	return string(uid)
 }
 
 // nullifyManagedFields ManagedFields field contains fields with dot that prevent from elasticsearch to index

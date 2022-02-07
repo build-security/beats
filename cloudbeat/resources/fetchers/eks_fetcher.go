@@ -3,8 +3,8 @@ package fetchers
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/elastic/beats/v7/cloudbeat/resources"
 )
 
 const EKSType = "aws-eks"
@@ -15,8 +15,12 @@ type EKSFetcher struct {
 }
 
 type EKSFetcherConfig struct {
-	resources.BaseFetcherConfig
+	BaseFetcherConfig
 	ClusterName string `config:"clusterName"`
+}
+
+type EKSResource struct {
+	*eks.DescribeClusterResponse
 }
 
 func NewEKSFetcher(awsCfg aws.Config, cfg EKSFetcherConfig) (Fetcher, error) {
@@ -34,7 +38,7 @@ func (f EKSFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 	result, err := f.eksProvider.DescribeCluster(ctx, f.cfg.ClusterName)
 	results = append(results, FetcherResult{
 		Type:     EKSType,
-		Resource: result,
+		Resource: EKSResource{result},
 	})
 
 	return results, err
@@ -43,6 +47,6 @@ func (f EKSFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 func (f EKSFetcher) Stop() {
 }
 
-func (res EKSFetchResult) GetID() string {
+func (res EKSResource) GetID() string {
 	return ""
 }

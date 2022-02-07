@@ -149,10 +149,22 @@ func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegis
 	if err = registry.Register(fetchers.KubeAPIType, kubef, condition); err != nil {
 		return nil, err
 	}
-	if err = registry.Register(fetchers.ProcessType, fetchers.NewProcessesFetcher(processesDir)); err != nil {
+
+	procCfg := fetchers.ProcessFetcherConfig{
+		Directory: processesDir,
+	}
+
+	procf := fetchers.NewProcessesFetcher(procCfg)
+	if err = registry.Register(fetchers.ProcessType, procf); err != nil {
 		return nil, err
 	}
-	if err = registry.Register(fetchers.FileSystemType, fetchers.NewFileFetcher(c.Files)); err != nil {
+
+	fileCfg := fetchers.FileFetcherConfig{
+		Patterns: c.Files,
+	}
+	filef := fetchers.NewFileFetcher(fileCfg)
+
+	if err = registry.Register("file_system", filef); err != nil {
 		return nil, err
 	}
 
@@ -183,5 +195,5 @@ func (bt *cloudbeat) updateCycleStatus(cycleId uuid.UUID, status string) {
 
 // configureProcessors configure processors to be used by the beat
 func (bt *cloudbeat) configureProcessors(processorsList processors.PluginConfig) (procs *processors.Processors, err error) {
-	return processors.New(processorsList), nil
+	return processors.New(processorsList)
 }

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/elastic/beats/v7/cloudbeat/resources"
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 
@@ -80,7 +79,7 @@ type KubeApiFetcherConfig struct {
 	Kubeconfig string        `config:"kubeconfig"`
 }
 
-func NewKubeFetcher(cfg KubeApiFetcherConfig) (resources.Fetcher, error) {
+func NewKubeFetcher(cfg KubeApiFetcherConfig) (Fetcher, error) {
 	f := &KubeFetcher{
 		cfg:      cfg,
 		watchers: make([]kubernetes.Watcher, 0),
@@ -154,19 +153,6 @@ func (f *KubeFetcher) Stop() {
 	for _, watcher := range f.watchers {
 		watcher.Stop()
 	}
-}
-
-// addTypeInformationToKubeResource adds TypeMeta information to a kubernetes.Resource based upon the loaded scheme.Scheme
-func (res kubeFetchResult) GetID() string {
-	accessor, err := meta.Accessor(res.o)
-	if err != nil {
-		// Some err occur while trying to get metadata - return obj without id
-		fmt.Errorf("missing required metadata fields; %w", err)
-		return ""
-	}
-
-	uid := accessor.GetUID()
-	return string(uid)
 }
 
 // addTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme

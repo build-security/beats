@@ -65,7 +65,7 @@ type RegistryTestSuite struct {
 	registry FetchersRegistry
 }
 
-func TestExampleTestSuite(t *testing.T) {
+func TestRegistryTestSuite(t *testing.T) {
 	suite.Run(t, new(RegistryTestSuite))
 }
 

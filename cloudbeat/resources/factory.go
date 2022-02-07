@@ -5,9 +5,10 @@ import (
 
 	"github.com/elastic/beats/v7/cloudbeat/config"
 	"github.com/elastic/beats/v7/libbeat/common"
+	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
-var Factories = factories{m: make(map[string]FetcherFactory)}
+var Factories = newFactories()
 
 type FetcherFactory func(common.Config) (Fetcher, error)
 
@@ -15,10 +16,14 @@ type factories struct {
 	m map[string]FetcherFactory
 }
 
+func newFactories() factories {
+	return factories{m: make(map[string]FetcherFactory)}
+}
+
 func (fa *factories) ListFetcher(name string, f FetcherFactory) {
 	_, ok := fa.m[name]
 	if ok {
-		// log
+		logp.L().Warnf("fetcher %q factory method overwritten", name)
 	}
 
 	fa.m[name] = f
@@ -52,31 +57,3 @@ func ConfigFetchers(registry FetchersRegistry, cfg config.Config) error {
 
 	return nil
 }
-
-// {
-// 	kubebeat:
-// 		fetchers: [
-// 			{
-// 				type: file_fetcher
-// 				patterns: []
-// 				period:
-// 			}
-// 			{
-// 				type: process_fetcher
-// 				period: 10s
-// 			}
-// 			{
-// 				type: kubeapi_fetcher
-// 				requiredResources: [
-// 					{
-// 						resource_name: POD
-// 						resource_namespace: ""
-// 					}
-// 					{
-// 						resource_name: Deployment
-// 						resource_namespace: "kube-system"
-// 					}
-// 				]
-// 			}
-// 		]
-// }

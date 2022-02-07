@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"os"
 
-<<<<<<< HEAD:kubebeat/main.go
-	"github.com/elastic/beats/v7/kubebeat/beater"
-	"github.com/elastic/beats/v7/kubebeat/cmd"
-	"github.com/elastic/beats/v7/libbeat/cmd/instance"
-=======
+	"github.com/elastic/beats/v7/cloudbeat/beater"
 	"github.com/elastic/beats/v7/cloudbeat/cmd"
->>>>>>> master:cloudbeat/main.go
+	"github.com/elastic/beats/v7/libbeat/cmd/instance"
 
 	_ "github.com/elastic/beats/v7/cloudbeat/include"
 )

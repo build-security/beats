@@ -132,7 +132,7 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 	}
 }
 
-func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegistry, error) {
+func InitRegistry2(ctx context.Context, c config.Config) (resources.FetchersRegistry, error) {
 	registry := resources.NewFetcherRegistry()
 
 	kubeCfg := fetchers.KubeApiFetcherConfig{
@@ -171,6 +171,16 @@ func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegis
 	filef := fetchers.NewFileFetcher(fileCfg)
 
 	if err = registry.Register("file_system", filef); err != nil {
+		return nil, err
+	}
+
+	return registry, nil
+}
+
+func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegistry, error) {
+	registry := resources.NewFetcherRegistry()
+	err := resources.ConfigFetchers(registry, c)
+	if err != nil {
 		return nil, err
 	}
 

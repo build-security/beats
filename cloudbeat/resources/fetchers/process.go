@@ -4,12 +4,17 @@ import (
 	"context"
 
 	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/x-pack/osquerybeat/ext/osquery-extension/pkg/proc"
 )
 
 const (
 	ProcessType = "process"
 )
+
+func init() {
+	resources.Amir.ListFetcher(ProcessType, ConfigProcessesFetcher)
+}
 
 type ProcessesFetcher struct {
 	cfg ProcessFetcherConfig
@@ -18,6 +23,16 @@ type ProcessesFetcher struct {
 type ProcessFetcherConfig struct {
 	resources.BaseFetcherConfig
 	Directory string `config:"directory"` // parent directory of target procfs
+}
+
+func ConfigProcessesFetcher(c common.Config) (resources.Fetcher, error) {
+	cfg := ProcessFetcherConfig{}
+	err := c.Unpack(&cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewProcessesFetcher(cfg), nil
 }
 
 func NewProcessesFetcher(cfg ProcessFetcherConfig) resources.Fetcher {

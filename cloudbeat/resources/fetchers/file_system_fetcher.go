@@ -8,8 +8,17 @@ import (
 	"syscall"
 
 	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
+
+const (
+	FileSystemType = "file-system"
+)
+
+func init() {
+	resources.Amir.ListFetcher(FileSystemType, ConfigFileFetcher)
+}
 
 // FileSystemFetcher implement the resources.Fetcher interface
 // The FileSystemFetcher meant to fetch file/directories from the file system and ship it
@@ -23,9 +32,15 @@ type FileFetcherConfig struct {
 	Patterns []string `config:"patterns"` // Files and directories paths for the fetcher to extract info from
 }
 
-const (
-	FileSystemType = "file-system"
-)
+func ConfigFileFetcher(c common.Config) (resources.Fetcher, error) {
+	cfg := FileFetcherConfig{}
+	err := c.Unpack(&cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFileFetcher(cfg), nil
+}
 
 func NewFileFetcher(cfg FileFetcherConfig) resources.Fetcher {
 	return &FileSystemFetcher{

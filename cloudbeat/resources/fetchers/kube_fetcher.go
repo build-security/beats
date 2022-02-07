@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/elastic/beats/v7/cloudbeat/resources"
+	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 
@@ -19,6 +20,10 @@ const (
 	KubeAPIType   = "kube-api"
 	allNamespaces = "" // The Kube API treats this as "all namespaces"
 )
+
+func init() {
+	resources.Amir.ListFetcher(KubeAPIType, ConfigKubeFetcher)
+}
 
 var (
 	// vanillaClusterResources represents those resources that are required for a vanilla
@@ -78,6 +83,16 @@ type KubeApiFetcherConfig struct {
 	resources.BaseFetcherConfig
 	Interval   time.Duration `config:"interval"`
 	Kubeconfig string        `config:"kubeconfig"`
+}
+
+func ConfigKubeFetcher(c common.Config) (resources.Fetcher, error) {
+	cfg := KubeApiFetcherConfig{}
+	err := c.Unpack(&cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewKubeFetcher(cfg)
 }
 
 func NewKubeFetcher(cfg KubeApiFetcherConfig) (resources.Fetcher, error) {

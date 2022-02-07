@@ -1,4 +1,4 @@
-package opa
+package constructor
 
 import (
 	"encoding/json"

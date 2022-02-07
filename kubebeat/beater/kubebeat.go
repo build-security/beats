@@ -3,6 +3,7 @@ package beater
 import (
 	"context"
 	"fmt"
+	"github.com/elastic/beats/v7/kubebeat/constructor"
 	"time"
 
 	"github.com/elastic/beats/v7/kubebeat/config"
@@ -30,15 +31,14 @@ type kubebeat struct {
 	client       beat.Client
 	data         *resources.Data
 	eval         *opa.Evaluator
-	resultParser *opa.EvaluationResultParser
-	scheduler    ResourceScheduler
+	resultsIndex string
+	constructor  constructor.Constructor
 }
 
 const (
 	cycleStatusStart = "start"
 	cycleStatusEnd   = "end"
 	processesDir     = "/hostfs"
-	cycleStatusFail  = "fail"
 )
 
 // New creates an instance of kubebeat.
@@ -62,7 +62,6 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	scheduler := NewSynchronousScheduler()
 	evaluator, err := opa.NewEvaluator(ctx)
 	if err != nil {
 		return nil, err
@@ -70,19 +69,20 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	// namespace will be passed as param from fleet on https://github.com/elastic/security-team/issues/2383 and it's user configurable
 	resultsIndex := config.Datastream("", config.ResultsDatastreamIndexPrefix)
-	eventParser, err := opa.NewEvaluationResultParser(resultsIndex)
 	if err != nil {
 		return nil, err
 	}
-	
+
+	constructor := constructor.NewConstructor(evaluator.Decision, resultsIndex)
+
 	bt := &kubebeat{
 		ctx:          ctx,
 		cancel:       cancel,
 		config:       c,
 		eval:         evaluator,
 		data:         data,
-		resultParser: eventParser,
-		scheduler:    scheduler,
+		resultsIndex: resultsIndex,
+		constructor:  constructor,
 	}
 	return bt, nil
 }
@@ -90,7 +90,6 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 // Run starts kubebeat.
 func (bt *kubebeat) Run(b *beat.Beat) error {
 	logp.Info("kubebeat is running! Hit CTRL-C to stop it.")
-
 	if err := bt.data.Run(bt.ctx); err != nil {
 		return err
 	}
@@ -119,13 +118,7 @@ func (bt *kubebeat) Run(b *beat.Beat) error {
 			cycleId, _ := uuid.NewV4()
 			// update hidden-index that the beat's cycle has started
 			bt.updateCycleStatus(cycleId, cycleStatusStart)
-
-			resourceCallback := func(resource interface{}) {
-				bt.resourceIteration(bt.ctx, resource, cycleId)
-			}
-
-			bt.scheduler.ScheduleResources(o, resourceCallback)
-
+			bt.constructor.ProcessOutput(bt.ctx, bt.client, o, constructor.CycleMetadata{CycleId: cycleId})
 			// update hidden-index that the beat's cycle has ended
 			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}
@@ -147,33 +140,17 @@ func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegis
 	leaseProvider := conditions.NewLeaderLeaseProvider(ctx, client)
 	condition := conditions.NewLeaseFetcherCondition(leaseProvider)
 
-	if err = registry.Register("kube_api", kubef, condition); err != nil {
+	if err = registry.Register(fetchers.KubeAPIType, kubef, condition); err != nil {
 		return nil, err
 	}
-	if err = registry.Register("processes", fetchers.NewProcessesFetcher(processesDir)); err != nil {
+	if err = registry.Register(fetchers.ProcessType, fetchers.NewProcessesFetcher(processesDir)); err != nil {
 		return nil, err
 	}
-	if err = registry.Register("file_system", fetchers.NewFileFetcher(c.Files)); err != nil {
+	if err = registry.Register(fetchers.FileSystemType, fetchers.NewFileFetcher(c.Files)); err != nil {
 		return nil, err
 	}
 
 	return registry, nil
-}
-
-func (bt *kubebeat) resourceIteration(ctx context.Context, resource interface{}, cycleId uuid.UUID) {
-	result, err := bt.eval.Decision(ctx, resource)
-	if err != nil {
-		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return
-	}
-	events, err := bt.resultParser.ParseResult(result, cycleId)
-
-	if err != nil {
-		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return
-	}
-
-	bt.client.PublishAll(events)
 }
 
 // Stop stops kubebeat.

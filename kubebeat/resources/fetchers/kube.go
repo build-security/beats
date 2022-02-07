@@ -77,6 +77,10 @@ type KubeFetcher struct {
 	watchers   []kubernetes.Watcher
 }
 
+type kubeFetchResult struct {
+	o runtime.Object
+}
+
 func NewKubeFetcher(kubeconfig string, interval time.Duration) (resources.Fetcher, error) {
 	f := &KubeFetcher{
 		kubeconfig: kubeconfig,
@@ -159,9 +163,7 @@ func (f *KubeFetcher) Fetch(ctx context.Context) ([]resources.FetcherResult, err
 			}
 
 			addTypeInformationToObject(o) // See https://github.com/kubernetes/kubernetes/issues/3030
-			resourceID := f.GetResourceID(o)
-
-			ret = append(ret, resources.FetcherResult{ID: resourceID, Type: KubeAPIType, Resource: o})
+			ret = append(ret, &kubeFetchResult{o})
 		}
 	}
 
@@ -174,9 +176,8 @@ func (f *KubeFetcher) Stop() {
 	}
 }
 
-func (f *KubeFetcher) GetResourceID(obj interface{}) string {
-	kubeApiResource := obj.(runtime.Object)
-	accessor, err := meta.Accessor(kubeApiResource)
+func (obj kubeFetchResult) GetID() string {
+	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		// Some err occur while trying to get metadata - return obj without id
 		fmt.Errorf("missing required metadata fields; %w", err)

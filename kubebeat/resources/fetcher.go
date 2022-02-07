@@ -10,7 +10,6 @@ import (
 type Fetcher interface {
 	Fetch(context.Context) ([]FetcherResult, error)
 	Stop()
-	GetResourceID(resource interface{}) string
 }
 
 type FetcherCondition interface {
@@ -18,11 +17,15 @@ type FetcherCondition interface {
 	Name() string
 }
 
-type FetcherResult struct {
-	ID       string      `json:"id"`
-	Type     string      `json:"type"`
-	Resource interface{} `json:"resource"`
+type FetcherResult interface {
+	GetID() string
 }
+
+//type FetcherResult struct {
+//	ID       string      `json:"id"`
+//	Type     string      `json:"type"`
+//	Resource interface{} `json:"resource"`
+//}
 
 type FileSystemResource struct {
 	FileName string `json:"filename"`

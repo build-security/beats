@@ -56,6 +56,7 @@ func Build() error {
 	return nil
 
 }
+
 // Todo write mage build & package functions for kubebeat
 
 // Clean cleans all generated files and build artifacts.
@@ -65,7 +66,7 @@ func Clean() error {
 
 // Update updates the generated files (aka make update).
 
-// GolangCrossBuild build the Beat binary inside of the golang-builder.
+// GolangCrossBuild build the Beat binary inside of the golang-constructor.
 // Do not use directly, use crossBuild instead.
 func GolangCrossBuild() error {
 	return devtools.GolangCrossBuild(devtools.DefaultGolangCrossBuildArgs())

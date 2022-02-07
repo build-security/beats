@@ -13,7 +13,7 @@ const (
 )
 
 func init() {
-	resources.Amir.ListFetcher(ProcessType, ConfigProcessesFetcher)
+	resources.Factories.ListFetcher(ProcessType, ConfigProcessesFetcher)
 }
 
 type ProcessesFetcher struct {

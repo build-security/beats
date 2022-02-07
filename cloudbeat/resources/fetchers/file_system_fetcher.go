@@ -17,7 +17,7 @@ const (
 )
 
 func init() {
-	resources.Amir.ListFetcher(FileSystemType, ConfigFileFetcher)
+	resources.Factories.ListFetcher(FileSystemType, ConfigFileFetcher)
 }
 
 // FileSystemFetcher implement the resources.Fetcher interface

@@ -22,7 +22,7 @@ const (
 )
 
 func init() {
-	resources.Amir.ListFetcher(KubeAPIType, ConfigKubeFetcher)
+	resources.Factories.ListFetcher(KubeAPIType, ConfigKubeFetcher)
 }
 
 var (

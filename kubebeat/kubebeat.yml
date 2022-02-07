@@ -19,6 +19,10 @@ kubebeat:
       "/hostfs/var/lib/etcd",
       "/hostfs/etc/kubernetes/pki"
   ]
+  fetchers:
+  - fetcher: "kubeApi"
+    period: 5
+  - fetcher: "amir"
 # ================================== General ===================================
 
 # The name of the shipper that publishes the network data. It can be used to group
@@ -116,7 +120,7 @@ processors:
 #  - add_host_metadata: ~
 #  - add_cloud_metadata: ~
 #  - add_docker_metadata: ~
-  - add_cluster_id: ~
+  # - add_cluster_id: ~
 
 
 # ================================== Logging ===================================

@@ -1,12 +1,19 @@
 package constructor
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/elastic/beats/v7/cloudbeat/config"
+	"github.com/elastic/beats/v7/libbeat/beat"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	resourceId   = "8901"
+	resourceType = "file_system"
 )
 
 func TestEvaluationResultParserParseResult(t *testing.T) {
@@ -17,22 +24,26 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 	}
 	cycleId, _ := uuid.NewV4()
 	index := config.Datastream("", config.ResultsDatastreamIndexPrefix)
-	//Creating a new evaluation parser
-	parser, _ := NewEvaluationResultParser(index)
+	constructor := NewConstructor(beat.Client{}, index)
+	cycleMetadata := CycleMetadata{CycleId: cycleId}
 
-	parsedResult, err := parser.ParseResult(result, cycleId)
+	events, err := constructor.createBeatEvents(context.Background(), result, ResourceMetadata{
+		ResourceTypeMetadata: ResourceTypeMetadata{CycleMetadata: cycleMetadata, Type: resourceType},
+		ResourceId:           resourceId,
+	})
+
 	if err != nil {
 		assert.Fail(t, "error during parsing of the json", err)
 	}
 
-	for _, event := range parsedResult {
+	for _, event := range events {
 		assert.Equal(t, cycleId, event.Fields["cycle_id"], "event cycle_id is not correct")
 		assert.NotEmpty(t, event.Timestamp, `event timestamp is missing`)
 		assert.NotEmpty(t, event.Fields["result"], "event result is missing")
 		assert.NotEmpty(t, event.Fields["rule"], "event rule is missing")
 		assert.NotEmpty(t, event.Fields["resource"], "event resource is missing")
 		assert.NotEmpty(t, event.Fields["type"], "resource type is missing")
-		assert.NotEmpty(t, event.Fields["id"], "resource id is missing")
+		assert.NotEmpty(t, event.Fields["resource_id"], "resource id is missing")
 	}
 }
 
@@ -94,7 +105,5 @@ var jsonExample = `{
 "uid": "root",
 "inode": "8901"
 }
-"id": "8901",
-"type": "file-system"
 }
 `

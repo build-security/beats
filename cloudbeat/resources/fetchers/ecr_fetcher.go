@@ -49,6 +49,5 @@ func (res ECRResource) GetID() string {
 	return ""
 }
 
-
 func (f ECRFetcher) Stop() {
 }

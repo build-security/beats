@@ -115,11 +115,12 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 		select {
 		case <-bt.ctx.Done():
 			return nil
-		case o := <-output:
+		case fetchedResources := <-output:
 			cycleId, _ := uuid.NewV4()
 			// update hidden-index that the beat's cycle has started
 			bt.updateCycleStatus(cycleId, cycleStatusStart)
-			bt.constructor.ProcessOutput(bt.ctx, bt.client, o, constructor.CycleMetadata{CycleId: cycleId})
+			cycleMetadata := constructor.CycleMetadata{CycleId: cycleId}
+			bt.constructor.ProcessAggregatedResources(bt.ctx, bt.client, fetchedResources, cycleMetadata)
 			// update hidden-index that the beat's cycle has ended
 			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}

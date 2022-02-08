@@ -26,13 +26,13 @@ func NewConstructor(cb cb, index string) Constructor {
 	return Constructor{callback: cb, eventMetadata: eventMetadata}
 }
 
-func (c *Constructor) ProcessOutput(ctx context.Context, client beat.Client, o resources.Map, metadata CycleMetadata) {
+func (c *Constructor) ProcessAggregatedResources(ctx context.Context, client beat.Client, o resources.Map, metadata CycleMetadata) {
 	for fetcherType, fetcherResults := range o {
-		c.processResources(ctx, client, fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
+		c.processEachResource(ctx, client, fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
 	}
 }
 
-func (c *Constructor) processResources(ctx context.Context, client beat.Client, results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
+func (c *Constructor) processEachResource(ctx context.Context, client beat.Client, results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
 	for _, result := range results {
 		events, err := c.createBeatEvents(ctx, result, ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.Resource.GetID()})
 		if err != nil {

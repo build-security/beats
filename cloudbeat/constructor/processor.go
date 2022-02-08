@@ -13,34 +13,31 @@ import (
 	"time"
 )
 
-type cb func(ctx context.Context, input interface{}) (interface{}, error)
+type cb func(ctx context.Context, input fetchers.FetcherResult) (interface{}, error)
 
 type Constructor struct {
 	context       context.Context
 	callback      cb
 	eventMetadata common.MapStr
-	events        []beat.Event
+	eventsCh      chan beat.Event
 }
 
-func NewConstructor(ctx context.Context, cb cb, index string) Constructor {
+func NewConstructor(ctx context.Context, cb cb, index string, ch chan beat.Event) Constructor {
 	eventMetadata := common.MapStr{libevents.FieldMetaIndex: index}
-	events := make([]beat.Event, 0)
 
 	return Constructor{
 		context:       ctx,
 		callback:      cb,
 		eventMetadata: eventMetadata,
-		events:        events,
+		eventsCh:      ch,
 	}
 }
 
-func (c *Constructor) ProcessAggregatedResources(resources resources.Map, metadata CycleMetadata) []beat.Event {
-	c.events = make([]beat.Event, 0)
+func (c *Constructor) ProcessAggregatedResources(resources resources.Map, metadata CycleMetadata) {
 	for fetcherType, fetcherResults := range resources {
 		c.processEachResource(fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
 	}
-
-	return c.events
+	close(c.eventsCh)
 }
 
 func (c *Constructor) processEachResource(results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
@@ -52,14 +49,14 @@ func (c *Constructor) processEachResource(results []fetchers.FetcherResult, meta
 	}
 }
 
-func (c *Constructor) createBeatEvents(resource interface{}, metadata ResourceMetadata) error {
-	result, err := c.callback(c.context, resource)
+func (c *Constructor) createBeatEvents(result fetchers.FetcherResult, metadata ResourceMetadata) error {
+	opaResult, err := c.callback(c.context, result)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return err
 	}
 
-	findings, err := ParseResult(result)
+	findings, err := ParseResult(opaResult)
 	timestamp := time.Now()
 	for _, finding := range findings {
 		event := beat.Event{
@@ -70,13 +67,14 @@ func (c *Constructor) createBeatEvents(resource interface{}, metadata ResourceMe
 				"type":        metadata.Type,
 				"cycle_id":    metadata.CycleId,
 				"result":      finding.Result,
-				"resource":    resource,
+				"resource":    result.Resource,
 				"rule":        finding.Rule,
 			},
 		}
 
-		c.events = append(c.events, event)
+		c.eventsCh <- event
 	}
+
 	return nil
 }
 

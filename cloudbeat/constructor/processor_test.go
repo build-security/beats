@@ -24,7 +24,7 @@ func TestEvaluationResultParserParseResult(t *testing.T) {
 	}
 	cycleId, _ := uuid.NewV4()
 	index := config.Datastream("", config.ResultsDatastreamIndexPrefix)
-	constructor := NewConstructor(beat.Client{}, index)
+	constructor := NewConstructor(beat.Client{}, index, nil)
 	cycleMetadata := CycleMetadata{CycleId: cycleId}
 
 	events, err := constructor.createBeatEvents(context.Background(), result, ResourceMetadata{

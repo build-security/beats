@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
 	"net/http"
 
 	"github.com/elastic/beats/v7/cloudbeat/beater/bundle"
@@ -44,7 +45,7 @@ func NewEvaluator(ctx context.Context) (*Evaluator, error) {
 	}, nil
 }
 
-func (e *Evaluator) Decision(ctx context.Context, input interface{}) (interface{}, error) {
+func (e *Evaluator) Decision(ctx context.Context, input fetchers.FetcherResult) (interface{}, error) {
 	// get the named policy decision for the specified input
 	result, err := e.opa.Decision(ctx, sdk.DecisionOptions{
 		Path:  "main",

@@ -126,4 +126,4 @@ jobs:
           secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
-          image: elastic-agent:${{ github.sha }}, elastic-agent:${{ GITHUB_REF_NAME }}
+          image: elastic-agent:${{ github.sha }}, elastic-agent:${{ github.ref.name }}

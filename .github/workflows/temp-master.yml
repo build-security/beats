@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - staging-update-from-upstream
+      - aix-agent-packing-banch-just-for-cicd
 
 env:
   OPABEAT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
@@ -140,7 +141,7 @@ jobs:
           secret-access-key: ${{ env.AWS_ECR_SECRET }}
           region: ${{ env.AWS_ECR_REGION }}
           local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
-          image: elastic-agent:${{ github.sha }}, elastic-agent:csp-latest
+          image: elastic-agent:${{ github.sha }}, elastic-agent:eyal-test
 
       # - name: Notify job failure
       #   if: failure()

@@ -1,6 +1,11 @@
-################### {Beat} Configuration Example #########################
+###################### Cloudbeat Configuration Example #######################
 
-############################# {Beat} ######################################
+# This file is an example configuration file highlighting only the most common
+# options. The cloudbeat.reference.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/cloudbeat/index.html
 
 cloudbeat:
   # Defines how often an event is sent to the output
@@ -116,6 +121,7 @@ output.elasticsearch:
 processors:
   - add_host_metadata: ~
   - add_cloud_metadata: ~
+  - add_cluster_id: ~
   - add_docker_metadata: ~
 
 

@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/elastic/beats/v7/cloudbeat/resources"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +30,7 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 	resourceData := result.Resource.(FileSystemResource)
 	assert.Equal(t, files[0], resourceData.FileName)
 	assert.Equal(t, "600", resourceData.FileMode)
-	assert.NotNil(t, result.ID)
+	assert.NotNil(t, result.GetID())
 	assert.NotNil(t, result.Type)
 }
 

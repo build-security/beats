@@ -13,8 +13,6 @@ import (
 const (
 	duration     = 10 * time.Second
 	fetcherCount = 10
-	fetcherType  = "number_fetcher"
-	resourceID   = "dummyID"
 )
 
 func TestDataRun(t *testing.T) {

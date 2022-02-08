@@ -16,38 +16,47 @@ import (
 type cb func(ctx context.Context, input interface{}) (interface{}, error)
 
 type Constructor struct {
+	context       context.Context
 	callback      cb
 	eventMetadata common.MapStr
+	events        []beat.Event
 }
 
-func NewConstructor(cb cb, index string) Constructor {
+func NewConstructor(ctx context.Context, cb cb, index string) Constructor {
 	eventMetadata := common.MapStr{libevents.FieldMetaIndex: index}
+	events := make([]beat.Event, 0)
 
-	return Constructor{callback: cb, eventMetadata: eventMetadata}
-}
-
-func (c *Constructor) ProcessAggregatedResources(ctx context.Context, client beat.Client, o resources.Map, metadata CycleMetadata) {
-	for fetcherType, fetcherResults := range o {
-		c.processEachResource(ctx, client, fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
+	return Constructor{
+		context:       ctx,
+		callback:      cb,
+		eventMetadata: eventMetadata,
+		events:        events,
 	}
 }
 
-func (c *Constructor) processEachResource(ctx context.Context, client beat.Client, results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
+func (c *Constructor) ProcessAggregatedResources(resources resources.Map, metadata CycleMetadata) []beat.Event {
+	c.events = make([]beat.Event, 0)
+	for fetcherType, fetcherResults := range resources {
+		c.processEachResource(fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
+	}
+
+	return c.events
+}
+
+func (c *Constructor) processEachResource(results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
 	for _, result := range results {
-		events, err := c.createBeatEvents(ctx, result, ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.Resource.GetID()})
-		if err != nil {
+		resMetadata := ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.Resource.GetID()}
+		if err := c.createBeatEvents(result, resMetadata); err != nil {
 			fmt.Errorf("failed to create beat events for, %v, Error: %v", metadata, err)
 		}
-		client.PublishAll(events)
 	}
 }
 
-func (c *Constructor) createBeatEvents(ctx context.Context, resource interface{}, metadata ResourceMetadata) ([]beat.Event, error) {
-	events := make([]beat.Event, 0)
-	result, err := c.callback(ctx, resource)
+func (c *Constructor) createBeatEvents(resource interface{}, metadata ResourceMetadata) error {
+	result, err := c.callback(c.context, resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
-		return nil, err
+		return err
 	}
 
 	findings, err := ParseResult(result)
@@ -66,10 +75,9 @@ func (c *Constructor) createBeatEvents(ctx context.Context, resource interface{}
 			},
 		}
 
-		events = append(events, event)
+		c.events = append(c.events, event)
 	}
-
-	return events, nil
+	return nil
 }
 
 func ParseResult(result interface{}) ([]Finding, error) {

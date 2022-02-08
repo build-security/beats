@@ -38,7 +38,6 @@ const (
 	cycleStatusStart = "start"
 	cycleStatusEnd   = "end"
 	processesDir     = "/hostfs"
-	cycleStatusFail  = "fail"
 )
 
 // New creates an instance of cloudbeat.
@@ -73,7 +72,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	constructor := constructor.NewConstructor(evaluator.Decision, resultsIndex)
+	constructor := constructor.NewConstructor(ctx, evaluator.Decision, resultsIndex)
 
 	bt := &cloudbeat{
 		ctx:          ctx,
@@ -120,7 +119,9 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 			// update hidden-index that the beat's cycle has started
 			bt.updateCycleStatus(cycleId, cycleStatusStart)
 			cycleMetadata := constructor.CycleMetadata{CycleId: cycleId}
-			bt.constructor.ProcessAggregatedResources(bt.ctx, bt.client, fetchedResources, cycleMetadata)
+			// TODO: send events through a channel and publish them by a configured threshold & time
+			events := bt.constructor.ProcessAggregatedResources(fetchedResources, cycleMetadata)
+			bt.client.PublishAll(events)
 			// update hidden-index that the beat's cycle has ended
 			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}
@@ -165,7 +166,7 @@ func InitRegistry(ctx context.Context, c config.Config) (resources.FetchersRegis
 	}
 	filef := fetchers.NewFileFetcher(fileCfg)
 
-	if err = registry.Register("file_system", filef); err != nil {
+	if err = registry.Register(fetchers.FileSystemType, filef); err != nil {
 		return nil, err
 	}
 

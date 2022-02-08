@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - staging-update-from-upstream
+      - bugfix/cloudbeat-rename
 
 
 env:
@@ -116,3 +117,13 @@ jobs:
         working-directory: x-pack/elastic-agent
         run: |
           DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
+
+      - name: Push to ECR
+        id: ecr
+        uses: jwalton/gh-ecr-push@v1
+        with:
+          access-key-id: ${{ env.AWS_ECR_KEY }}
+          secret-access-key: ${{ env.AWS_ECR_SECRET }}
+          region: ${{ env.AWS_ECR_REGION }}
+          local-image: docker.elastic.co/beats/elastic-agent:8.1.0-SNAPSHOT
+          image: elastic-agent:${{ github.sha }}, elastic-agent:${{ GITHUB_REF_NAME }}

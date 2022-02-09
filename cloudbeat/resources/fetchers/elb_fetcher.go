@@ -33,14 +33,11 @@ func NewELBFetcher(awsCfg aws.Config, cfg ELBFetcherConfig) (Fetcher, error) {
 	}, nil
 }
 
-func (f ELBFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
-	results := make([]FetcherResult, 0)
+func (f ELBFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
+	results := make([]PolicyResource, 0)
 
 	result, err := f.elbProvider.DescribeLoadBalancer(ctx, f.cfg.LoadBalancerNames)
-	results = append(results, FetcherResult{
-		Type:     ELBType,
-		Resource: ELBResource{result},
-	})
+	results = append(results, ELBResource{result})
 
 	return results, err
 }

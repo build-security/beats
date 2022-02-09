@@ -25,13 +25,13 @@ func NewProcessesFetcher(cfg ProcessFetcherConfig) Fetcher {
 	}
 }
 
-func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 	pids, err := proc.List(f.cfg.Directory)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := make([]FetcherResult, 0)
+	ret := make([]PolicyResource, 0)
 
 	// If errors occur during read, then return what we have till now
 	// without reporting errors.
@@ -46,10 +46,7 @@ func (f *ProcessesFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
 			return ret, nil
 		}
 
-		ret = append(ret, FetcherResult{
-			Type:     ProcessType,
-			Resource: ProcessResource{PID: p, Cmd: cmd, Stat: stat},
-		})
+		ret = append(ret, ProcessResource{PID: p, Cmd: cmd, Stat: stat})
 	}
 
 	return ret, nil

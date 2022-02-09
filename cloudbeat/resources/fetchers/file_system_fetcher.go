@@ -32,8 +32,8 @@ func NewFileFetcher(cfg FileFetcherConfig) Fetcher {
 	}
 }
 
-func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
-	results := make([]FetcherResult, 0)
+func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
+	results := make([]PolicyResource, 0)
 
 	// Input files might contain glob pattern
 	for _, filePattern := range f.cfg.Patterns {
@@ -43,10 +43,7 @@ func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) 
 		}
 		for _, file := range matchedFiles {
 			resource := f.fetchSystemResource(file)
-			results = append(results, FetcherResult{
-				Type:     FileSystemType,
-				Resource: resource,
-			})
+			results = append(results, resource)
 		}
 	}
 	return results, nil

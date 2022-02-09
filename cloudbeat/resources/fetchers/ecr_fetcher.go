@@ -32,15 +32,12 @@ func NewECRFetcher(awsCfg aws.Config, cfg ECRFetcherConfig) (Fetcher, error) {
 	}, nil
 }
 
-func (f ECRFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
-	results := make([]FetcherResult, 0)
+func (f ECRFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
+	results := make([]PolicyResource, 0)
 
 	// TODO - The provider should get a list of the repositories it needs to check, and not check the entire ECR account`
 	repositories, err := f.ecrProvider.DescribeAllECRRepositories(ctx)
-	results = append(results, FetcherResult{
-		Type:     ECRType,
-		Resource: ECRResource{repositories},
-	})
+	results = append(results, ECRResource{repositories})
 
 	return results, err
 }

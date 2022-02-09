@@ -12,8 +12,8 @@ type ExtK8sResource struct {
 	kubernetes.Resource
 }
 
-func GetKubeData(watchers []kubernetes.Watcher) []FetcherResult {
-	ret := make([]FetcherResult, 0)
+func GetKubeData(watchers []kubernetes.Watcher) []PolicyResource {
+	ret := make([]PolicyResource, 0)
 
 	for _, watcher := range watchers {
 		rs := watcher.Store().List()
@@ -33,10 +33,7 @@ func GetKubeData(watchers []kubernetes.Watcher) []FetcherResult {
 				continue
 			} // See https://github.com/kubernetes/kubernetes/issues/3030
 
-			ret = append(ret, FetcherResult{
-				Type:     KubeAPIType,
-				Resource: ExtK8sResource{resource},
-			})
+			ret = append(ret, ExtK8sResource{resource})
 		}
 	}
 

@@ -7,7 +7,7 @@ import (
 
 // Fetcher represents a data fetcher.
 type Fetcher interface {
-	Fetch(context.Context) ([]FetcherResult, error)
+	Fetch(context.Context) ([]PolicyResource, error)
 	Stop()
 }
 
@@ -25,7 +25,7 @@ type FetcherResult struct {
 	Resource PolicyResource `json:"resource"`
 }
 
-type ResourceMap map[string][]FetcherResult
+type ResourceMap map[string][]PolicyResource
 
 type FileSystemResource struct {
 	FileName string `json:"filename"`

@@ -31,21 +31,18 @@ const (
 	testIndex          = "test_index"
 )
 
-var fetcherResult = fetchers.FetcherResult{
-	Type: "file-system",
-	Resource: fetchers.FileSystemResource{
-		FileName: "scheduler.conf",
-		FileMode: "700",
-		Gid:      "root",
-		Uid:      "root",
-		Path:     "/hostfs/etc/kubernetes/scheduler.conf",
-		Inode:    "8901",
-	},
+var fetcherResult = fetchers.FileSystemResource{
+	FileName: "scheduler.conf",
+	FileMode: "700",
+	Gid:      "root",
+	Uid:      "root",
+	Path:     "/hostfs/etc/kubernetes/scheduler.conf",
+	Inode:    "8901",
 }
 
 var (
 	opaResults   RuleResult
-	resourcesMap = map[string][]fetchers.FetcherResult{fetchers.FileSystemType: {fetcherResult}}
+	resourcesMap = map[string][]fetchers.PolicyResource{fetchers.FileSystemType: {fetcherResult}}
 	ctx          = context.Background()
 	events       = make([]beat.Event, 0)
 	cycleId      uuid.UUID

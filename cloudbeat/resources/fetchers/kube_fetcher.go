@@ -135,7 +135,7 @@ func (f *KubeFetcher) initWatchers() error {
 	return nil
 }
 
-func (f *KubeFetcher) Fetch(ctx context.Context) ([]FetcherResult, error) {
+func (f *KubeFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 	var err error
 	watcherlock.Do(func() {
 		err = f.initWatchers()

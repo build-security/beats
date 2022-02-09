@@ -15,11 +15,15 @@ type numberFetcher struct {
 	stopCalled bool
 }
 
+type NumberResource struct {
+	num int
+}
+
 func newNumberFetcher(num int) fetchers.Fetcher {
 	return &numberFetcher{num, false}
 }
 
-func (f *numberFetcher) Fetch(ctx context.Context) ([]fetchers.FetcherResult, error) {
+func (f *numberFetcher) Fetch(ctx context.Context) ([]fetchers.PolicyResource, error) {
 	return fetchValue(f.num), nil
 }
 
@@ -48,13 +52,12 @@ func (c *boolFetcherCondition) Name() string {
 	return c.name
 }
 
-func fetchValue(num int) []fetchers.FetcherResult {
-	return []fetchers.FetcherResult{
-		{
-			Type:     "number",
-			Resource: num,
-		},
-	}
+func fetchValue(num int) []fetchers.PolicyResource {
+	return []fetchers.PolicyResource{NumberResource{num}}
+}
+
+func (res NumberResource) GetID() string {
+	return ""
 }
 
 func registerNFetchers(t *testing.T, reg FetchersRegistry, n int) {
@@ -165,7 +168,7 @@ func (s *RegistryTestSuite) TestRunRegistered() {
 		arr, err := s.registry.Run(context.TODO(), test.key)
 		s.NoError(err)
 		s.Equal(1, len(arr))
-		s.Equal(test.value, arr[0].Resource)
+		s.Equal(test.value, arr[0])
 	}
 }
 

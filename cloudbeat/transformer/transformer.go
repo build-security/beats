@@ -1,4 +1,4 @@
-package constructor
+package transformer
 
 import "github.com/gofrs/uuid"
 
@@ -17,7 +17,8 @@ type CycleMetadata struct {
 }
 
 type RuleResult struct {
-	Findings []Finding `json:"findings"`
+	Findings []Finding   `json:"findings"`
+	Resource interface{} `json:"resource"`
 }
 
 type Finding struct {

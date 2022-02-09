@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/elastic/beats/v7/cloudbeat/config"
-	"github.com/elastic/beats/v7/cloudbeat/constructor"
 	"github.com/elastic/beats/v7/cloudbeat/opa"
 	_ "github.com/elastic/beats/v7/cloudbeat/processor" // Add cloudbeat default processors.
 	"github.com/elastic/beats/v7/cloudbeat/resources"
 	"github.com/elastic/beats/v7/cloudbeat/resources/conditions"
 	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
+	"github.com/elastic/beats/v7/cloudbeat/transformer"
 	"github.com/elastic/beats/v7/libbeat/beat"
 	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -31,7 +31,7 @@ type cloudbeat struct {
 	data         *resources.Data
 	eval         *opa.Evaluator
 	resultsIndex string
-	constructor  constructor.Constructor
+	transformer  transformer.Transformer
 }
 
 const (
@@ -72,7 +72,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	constructor := constructor.NewConstructor(ctx, evaluator.Decision, resultsIndex)
+	transformer := transformer.NewTransformer(ctx, evaluator.Decision, resultsIndex)
 
 	bt := &cloudbeat{
 		ctx:          ctx,
@@ -81,7 +81,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		eval:         evaluator,
 		data:         data,
 		resultsIndex: resultsIndex,
-		constructor:  constructor,
+		transformer:  transformer,
 	}
 	return bt, nil
 }
@@ -118,9 +118,9 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 			cycleId, _ := uuid.NewV4()
 			// update hidden-index that the beat's cycle has started
 			bt.updateCycleStatus(cycleId, cycleStatusStart)
-			cycleMetadata := constructor.CycleMetadata{CycleId: cycleId}
+			cycleMetadata := transformer.CycleMetadata{CycleId: cycleId}
 			// TODO: send events through a channel and publish them by a configured threshold & time
-			events := bt.constructor.ProcessAggregatedResources(fetchedResources, cycleMetadata)
+			events := bt.transformer.ProcessAggregatedResources(fetchedResources, cycleMetadata)
 			bt.client.PublishAll(events)
 			// update hidden-index that the beat's cycle has ended
 			bt.updateCycleStatus(cycleId, cycleStatusEnd)

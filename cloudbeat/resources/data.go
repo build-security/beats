@@ -16,28 +16,28 @@ import (
 // against it. It sends the cache to an output channel at the defined interval.
 type Data struct {
 	interval time.Duration
-	output   chan Map
+	output   chan ResourceMap
 
-	state    Map
+	state    ResourceMap
 	fetchers FetchersRegistry
 	wg       *sync.WaitGroup
 }
 
-type Map map[string][]fetchers.FetcherResult
+type ResourceMap map[string][]fetchers.FetcherResult
 
 // NewData returns a new Data instance with the given interval.
 func NewData(interval time.Duration, fetchers FetchersRegistry) (*Data, error) {
 	return &Data{
 		interval: interval,
-		output:   make(chan Map),
+		output:   make(chan ResourceMap),
 
-		state:    make(Map),
+		state:    make(ResourceMap),
 		fetchers: fetchers,
 	}, nil
 }
 
 // Output returns the output channel.
-func (d *Data) Output() <-chan Map {
+func (d *Data) Output() <-chan ResourceMap {
 	return d.output
 }
 
@@ -129,7 +129,7 @@ func (d *Data) Stop(ctx context.Context, cancel context.CancelFunc) {
 }
 
 // copyState makes a copyState of the given map.
-func copyState(m Map) (Map, error) {
+func copyState(m ResourceMap) (ResourceMap, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	dec := gob.NewDecoder(&buf)
@@ -137,7 +137,7 @@ func copyState(m Map) (Map, error) {
 	if err != nil {
 		return nil, err
 	}
-	var newState Map
+	var newState ResourceMap
 	err = dec.Decode(&newState)
 	if err != nil {
 		return nil, err

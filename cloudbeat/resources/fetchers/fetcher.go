@@ -25,6 +25,8 @@ type FetcherResult struct {
 	Resource PolicyResource `json:"resource"`
 }
 
+type ResourceMap map[string][]FetcherResult
+
 type FileSystemResource struct {
 	FileName string `json:"filename"`
 	FileMode string `json:"mode"`

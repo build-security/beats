@@ -1,4 +1,4 @@
-package constructor
+package transformer
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"time"
 )
 
-type cb func(ctx context.Context, input interface{}) (interface{}, error)
+type CB func(ctx context.Context, input interface{}) (interface{}, error)
 
-type Constructor struct {
+type Transformer struct {
 	context       context.Context
-	callback      cb
+	callback      CB
 	eventMetadata common.MapStr
 	events        []beat.Event
 }
 
-func NewConstructor(ctx context.Context, cb cb, index string) Constructor {
+func NewTransformer(ctx context.Context, cb CB, index string) Transformer {
 	eventMetadata := common.MapStr{libevents.FieldMetaIndex: index}
 	events := make([]beat.Event, 0)
 
-	return Constructor{
+	return Transformer{
 		context:       ctx,
 		callback:      cb,
 		eventMetadata: eventMetadata,
@@ -34,7 +34,7 @@ func NewConstructor(ctx context.Context, cb cb, index string) Constructor {
 	}
 }
 
-func (c *Constructor) ProcessAggregatedResources(resources resources.Map, metadata CycleMetadata) []beat.Event {
+func (c *Transformer) ProcessAggregatedResources(resources resources.ResourceMap, metadata CycleMetadata) []beat.Event {
 	c.events = make([]beat.Event, 0)
 	for fetcherType, fetcherResults := range resources {
 		c.processEachResource(fetcherResults, ResourceTypeMetadata{CycleMetadata: metadata, Type: fetcherType})
@@ -43,7 +43,7 @@ func (c *Constructor) ProcessAggregatedResources(resources resources.Map, metada
 	return c.events
 }
 
-func (c *Constructor) processEachResource(results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
+func (c *Transformer) processEachResource(results []fetchers.FetcherResult, metadata ResourceTypeMetadata) {
 	for _, result := range results {
 		resMetadata := ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.Resource.GetID()}
 		if err := c.createBeatEvents(result, resMetadata); err != nil {
@@ -52,14 +52,18 @@ func (c *Constructor) processEachResource(results []fetchers.FetcherResult, meta
 	}
 }
 
-func (c *Constructor) createBeatEvents(resource interface{}, metadata ResourceMetadata) error {
+func (c *Transformer) createBeatEvents(resource interface{}, metadata ResourceMetadata) error {
 	result, err := c.callback(c.context, resource)
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return err
 	}
 
-	findings, err := ParseResult(result)
+	findings, err := parseResult(result)
+	if err != nil {
+		return err
+	}
+
 	timestamp := time.Now()
 	for _, finding := range findings {
 		event := beat.Event{
@@ -80,7 +84,7 @@ func (c *Constructor) createBeatEvents(resource interface{}, metadata ResourceMe
 	return nil
 }
 
-func ParseResult(result interface{}) ([]Finding, error) {
+func parseResult(result interface{}) ([]Finding, error) {
 	var opaResult RuleResult
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{Result: &opaResult})
 	if err != nil {

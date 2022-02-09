@@ -3,6 +3,7 @@ package beater
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/elastic/beats/v7/cloudbeat/config"
@@ -11,6 +12,8 @@ import (
 	"github.com/elastic/beats/v7/cloudbeat/resources"
 	"github.com/elastic/beats/v7/cloudbeat/resources/conditions"
 	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
+	"github.com/elastic/beats/v7/libbeat/autodiscover"
+	_ "github.com/elastic/beats/v7/libbeat/autodiscover/providers/kubernetes" // Add k8s leaderelection
 	"github.com/elastic/beats/v7/libbeat/beat"
 	libevents "github.com/elastic/beats/v7/libbeat/beat/events"
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -25,8 +28,11 @@ import (
 type cloudbeat struct {
 	ctx    context.Context
 	cancel context.CancelFunc
+	done   chan struct{}
 
 	config       config.Config
+	autodiscover *autodiscover.Autodiscover
+
 	client       beat.Client
 	data         *resources.Data
 	eval         *opa.Evaluator
@@ -62,6 +68,21 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
+	var ad *autodiscover.Autodiscover
+	if c.Autodiscover != nil {
+		var err error
+		ad, err = autodiscover.NewAutodiscover(
+			"cloudbeat",
+			b.Publisher,
+			&resources.Ff{}, autodiscover.QueryConfig(),
+			c.Autodiscover,
+			b.Keystore,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	scheduler := NewSynchronousScheduler()
 	evaluator, err := opa.NewEvaluator(ctx)
 	if err != nil {
@@ -83,6 +104,8 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		data:         data,
 		resultParser: eventParser,
 		scheduler:    scheduler,
+		autodiscover: ad,
+		done:         make(chan struct{}),
 	}
 	return bt, nil
 }
@@ -91,9 +114,9 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 func (bt *cloudbeat) Run(b *beat.Beat) error {
 	logp.Info("cloudbeat is running! Hit CTRL-C to stop it.")
 
-	if err := bt.data.Run(bt.ctx); err != nil {
-		return err
-	}
+	// if err := bt.data.Run(bt.ctx); err != nil {
+	// 	return err
+	// }
 
 	procs, err := bt.configureProcessors(bt.config.Processors)
 	if err != nil {
@@ -108,6 +131,18 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 	}); err != nil {
 		return err
 	}
+
+	var wg sync.WaitGroup
+	if bt.autodiscover != nil {
+		bt.autodiscover.Start()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-bt.done
+			bt.autodiscover.Stop()
+		}()
+	}
+	wg.Wait()
 
 	output := bt.data.Output()
 

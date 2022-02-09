@@ -6,6 +6,7 @@ package config
 import (
 	"time"
 
+	"github.com/elastic/beats/v7/libbeat/autodiscover"
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/processors"
 )
@@ -17,11 +18,12 @@ const ResultsDatastreamIndexPrefix = "logs-k8s_cis.result"
 const MetadataDatastreamIndexPrefix = ".logs-k8s_cis.metadata"
 
 type Config struct {
-	KubeConfig string                  `config:"kube_config"`
-	Period     time.Duration           `config:"period"`
-	Files      []string                `config:"files"`
-	Processors processors.PluginConfig `config:"processors"`
-	Fetchers   []*common.Config        `config:"fetchers"`
+	KubeConfig   string                  `config:"kube_config"`
+	Period       time.Duration           `config:"period"`
+	Files        []string                `config:"files"`
+	Processors   processors.PluginConfig `config:"processors"`
+	Autodiscover *autodiscover.Config    `config:"autodiscover"`
+	Fetchers     []*common.Config        `config:"fetchers"`
 }
 
 var DefaultConfig = Config{

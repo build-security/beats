@@ -3,12 +3,23 @@
 ############################# {Beat} ######################################
 
 cloudbeat:
+  autodiscover:
+    providers:
+      - type: kubernetes
+        scope: cluster
+        unique: true  # defaults to false if omitted
+        templates:
+            - config:
+                - module: redis
+                  period: 10s
+                  hosts: ["${data.host}:6379"]
   # Defines how often an event is sent to the output
   period: 30s
   
   fetchers:
   - fetcher: "kube-api"
     interval: 5
+    # leader: ${kubernetes_leaderelection.leader} == true
   - fetcher: "file-system"
     patterns: [
         "/hostfs/etc/kubernetes/scheduler.conf",

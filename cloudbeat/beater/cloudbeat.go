@@ -38,12 +38,6 @@ const (
 	cycleStatusStart = "start"
 	cycleStatusEnd   = "end"
 	processesDir     = "/hostfs"
-	publishInterval  = time.Second * 15
-)
-
-var (
-	timer = time.NewTimer(publishInterval)
-	buf   = make([]beat.Event, 0, 100)
 )
 
 // New creates an instance of cloudbeat.
@@ -78,7 +72,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		return nil, err
 	}
 
-	constructor := constructor.NewConstructor(ctx, evaluator.Decision, resultsIndex, eventsCh)
+	constructor := constructor.NewConstructor(ctx, evaluator.Decision, resultsIndex)
 
 	bt := &cloudbeat{
 		ctx:          ctx,
@@ -125,33 +119,9 @@ func (bt *cloudbeat) Run(b *beat.Beat) error {
 			// update hidden-index that the beat's cycle has started
 			bt.updateCycleStatus(cycleId, cycleStatusStart)
 			cycleMetadata := constructor.CycleMetadata{CycleId: cycleId}
-			go bt.constructor.ProcessAggregatedResources(fetchedResources, cycleMetadata)
-			eventsCh := make(chan beat.Event)
-			for {
-				select {
-				case event, ok := <-eventsCh:
-					buf = append(buf, event)
-					if len(buf) == cap(buf) {
-						logp.Info("Buffer contains %v events, time to publish", len(buf))
-						bt.client.PublishAll(buf) // Buffer is full, we publish events immediately
-						buf = buf[:0]             // "Clear" the buffer
-						timer.Reset(publishInterval)
-					}
-
-					if !ok {
-						break
-						bt.client.PublishAll(buf) // Buffer is full, we publish events immediately
-						buf = buf[:0]             // "Clear" the buffer
-						timer.Reset(publishInterval)
-					}
-				case <-timer.C:
-					logp.Info("Publish events after %v seconds", publishInterval)
-					bt.client.PublishAll(buf)
-					buf = buf[:0] // "Clear" the buffer
-					timer.Reset(publishInterval)
-				}
-			}
-
+			// TODO: send events through a channel and publish them by a configured threshold & time
+			events := bt.constructor.ProcessAggregatedResources(fetchedResources, cycleMetadata)
+			bt.client.PublishAll(events)
 			// update hidden-index that the beat's cycle has ended
 			bt.updateCycleStatus(cycleId, cycleStatusEnd)
 		}
@@ -229,28 +199,3 @@ func (bt *cloudbeat) updateCycleStatus(cycleId uuid.UUID, status string) {
 func (bt *cloudbeat) configureProcessors(processorsList processors.PluginConfig) (procs *processors.Processors, err error) {
 	return processors.New(processorsList)
 }
-
-//
-//func (bt *cloudbeat) publishEventsWhenReady(fetchedResources resources.Map, cycleId uuid.UUID) {
-//	bt.updateCycleStatus(cycleId, cycleStatusStart)
-//	cycleMetadata := constructor.CycleMetadata{CycleId: cycleId}
-//	bt.constructor.ProcessAggregatedResources(fetchedResources, cycleMetadata)
-//
-//	for {
-//		select {
-//		case event := <-eventsCh:
-//			buf = append(buf, event)
-//			if len(buf) == cap(buf) {
-//				bt.client.PublishAll(buf) // Buffer is full, we publish events immediately
-//				buf = buf[:0]             // "Clear" the buffer
-//				timer.Reset(publishInterval)
-//				break
-//			}
-//		case <-timer.C:
-//			bt.client.PublishAll(buf) // "Regular" publish 20 seconds have passed since last write
-//			buf = buf[:0]             // "Clear" the buffer
-//			timer.Reset(publishInterval)
-//			break
-//		}
-//	}
-//}

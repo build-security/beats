@@ -16,7 +16,7 @@ type numberFetcher struct {
 }
 
 type NumberResource struct {
-	num int
+	int
 }
 
 func newNumberFetcher(num int) fetchers.Fetcher {
@@ -29,10 +29,6 @@ func (f *numberFetcher) Fetch(ctx context.Context) ([]fetchers.PolicyResource, e
 
 func (f *numberFetcher) Stop() {
 	f.stopCalled = true
-}
-
-func (f *numberFetcher) GetResourceID(resource interface{}) string {
-	return ""
 }
 
 type boolFetcherCondition struct {

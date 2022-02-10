@@ -16,7 +16,7 @@ type numberFetcher struct {
 }
 
 type NumberResource struct {
-	int
+	Num int
 }
 
 func newNumberFetcher(num int) fetchers.Fetcher {
@@ -147,16 +147,16 @@ func (s *RegistryTestSuite) TestRunRegistered() {
 
 	var tests = []struct {
 		key   string
-		value int
+		value NumberResource
 	}{
 		{
-			"some-key-1", 1,
+			"some-key-1", NumberResource{1},
 		},
 		{
-			"some-key-2", 2,
+			"some-key-2", NumberResource{2},
 		},
 		{
-			"some-key-3", 3,
+			"some-key-3", NumberResource{3},
 		},
 	}
 

@@ -48,3 +48,7 @@ func (f ELBFetcher) Stop() {
 func (res ELBResource) GetID() string {
 	return ""
 }
+
+func (r ELBResource) GetData() interface{} {
+	return r
+}

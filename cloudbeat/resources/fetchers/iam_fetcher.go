@@ -19,7 +19,7 @@ type IAMFetcherConfig struct {
 }
 
 type IAMResource struct {
-	res interface{}
+	Data interface{}
 }
 
 func NewIAMFetcher(awsCfg aws.Config, cfg IAMFetcherConfig) (Fetcher, error) {
@@ -43,6 +43,10 @@ func (f IAMFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 func (f IAMFetcher) Stop() {
 }
 
-func (res IAMResource) GetID() string {
+func (r IAMResource) GetID() string {
 	return ""
+}
+
+func (r IAMResource) GetData() interface{} {
+	return r.Data
 }

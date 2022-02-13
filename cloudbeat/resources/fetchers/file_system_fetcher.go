@@ -97,6 +97,10 @@ func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
 func (f *FileSystemFetcher) Stop() {
 }
 
-func (res FileSystemResource) GetID() string {
-	return res.Inode
+func (r FileSystemResource) GetID() string {
+	return r.Inode
+}
+
+func (r FileSystemResource) GetData() interface{} {
+	return r
 }

@@ -44,6 +44,10 @@ func (f EKSFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 func (f EKSFetcher) Stop() {
 }
 
-func (res EKSResource) GetID() string {
+func (r EKSResource) GetID() string {
 	return ""
+}
+
+func (r EKSResource) GetData() interface{} {
+	return r
 }

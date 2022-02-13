@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/gob"
 	"github.com/elastic/beats/v7/cloudbeat/resources/fetchers"
+	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"sync"
 	"time"
 
-	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
 )
 
@@ -149,6 +149,7 @@ func init() {
 	gob.Register([]interface{}{})
 	gob.Register(fetchers.ProcessResource{})
 	gob.Register(fetchers.FileSystemResource{})
+	gob.Register(fetchers.K8sResource{})
 	gob.Register(kubernetes.Pod{})
 	gob.Register(kubernetes.Secret{})
 	gob.Register(kubernetes.Role{})

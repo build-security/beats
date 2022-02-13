@@ -2,15 +2,17 @@ package fetchers
 
 import (
 	"fmt"
-
 	"github.com/elastic/beats/v7/libbeat/common/kubernetes"
 	"github.com/elastic/beats/v7/libbeat/logp"
-	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 )
 
-type ExtK8sResource struct {
-	kubernetes.Resource
+type K8sResource struct {
+	Data interface{}
 }
+
+const k8sObjMetadataField = "ObjectMeta"
 
 func GetKubeData(watchers []kubernetes.Watcher) []PolicyResource {
 	ret := make([]PolicyResource, 0)
@@ -33,23 +35,27 @@ func GetKubeData(watchers []kubernetes.Watcher) []PolicyResource {
 				continue
 			} // See https://github.com/kubernetes/kubernetes/issues/3030
 
-			ret = append(ret, ExtK8sResource{resource})
+			ret = append(ret, K8sResource{resource})
 		}
 	}
 
 	return ret
 }
 
-func (res ExtK8sResource) GetID() string {
-	accessor, err := meta.Accessor(res)
-	if err != nil {
-		// Some err occur while trying to get metadata - return obj without id
-		fmt.Errorf("missing required metadata fields; %w", err)
+func (r K8sResource) GetID() string {
+	k8sObj := reflect.ValueOf(r.Data)
+	metadata, ok := k8sObj.FieldByName(k8sObjMetadataField).Interface().(metav1.ObjectMeta)
+	if !ok {
+		fmt.Errorf("failed to retrieve object metadata")
 		return ""
 	}
 
-	uid := accessor.GetUID()
+	uid := metadata.UID
 	return string(uid)
+}
+
+func (r K8sResource) GetData() interface{} {
+	return r.Data
 }
 
 // nullifyManagedFields ManagedFields field contains fields with dot that prevent from elasticsearch to index

@@ -58,3 +58,7 @@ func (f *ProcessesFetcher) Stop() {
 func (res ProcessResource) GetID() string {
 	return res.PID
 }
+
+func (res ProcessResource) GetData() interface{} {
+	return res
+}

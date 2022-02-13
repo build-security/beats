@@ -75,13 +75,12 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	transformer := transformer.NewTransformer(ctx, evaluator.Decision, resultsIndex)
 
 	bt := &cloudbeat{
-		ctx:          ctx,
-		cancel:       cancel,
-		config:       c,
-		eval:         evaluator,
-		data:         data,
-		resultsIndex: resultsIndex,
-		transformer:  transformer,
+		ctx:         ctx,
+		cancel:      cancel,
+		config:      c,
+		eval:        evaluator,
+		data:        data,
+		transformer: transformer,
 	}
 	return bt, nil
 }

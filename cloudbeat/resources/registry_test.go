@@ -52,10 +52,6 @@ func fetchValue(num int) []fetchers.PolicyResource {
 	return []fetchers.PolicyResource{NumberResource{num}}
 }
 
-func (res NumberResource) GetID() string {
-	return ""
-}
-
 func registerNFetchers(t *testing.T, reg FetchersRegistry, n int) {
 	for i := 0; i < n; i++ {
 		key := fmt.Sprint(i)
@@ -146,8 +142,8 @@ func (s *RegistryTestSuite) TestRunRegistered() {
 	s.NoError(err)
 
 	var tests = []struct {
-		key   string
-		value NumberResource
+		key string
+		res NumberResource
 	}{
 		{
 			"some-key-1", NumberResource{1},
@@ -164,7 +160,7 @@ func (s *RegistryTestSuite) TestRunRegistered() {
 		arr, err := s.registry.Run(context.TODO(), test.key)
 		s.NoError(err)
 		s.Equal(1, len(arr))
-		s.Equal(test.value, arr[0])
+		s.Equal(test.res, arr[0])
 	}
 }
 
@@ -211,4 +207,12 @@ func (s *RegistryTestSuite) TestShouldRun() {
 		should := s.registry.ShouldRun("some-key")
 		s.Equal(test.expected, should)
 	}
+}
+
+func (res NumberResource) GetID() string {
+	return ""
+}
+
+func (res NumberResource) GetData() interface{} {
+	return res.Num
 }

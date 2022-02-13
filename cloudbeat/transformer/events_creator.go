@@ -46,16 +46,17 @@ func (c *Transformer) ProcessAggregatedResources(resources resources.ResourceMap
 func (c *Transformer) processEachResource(results []fetchers.PolicyResource, metadata ResourceTypeMetadata) {
 	for _, result := range results {
 		resMetadata := ResourceMetadata{ResourceTypeMetadata: metadata, ResourceId: result.GetID()}
-		fetcherResult := fetchers.FetcherResult{Type: metadata.Type, Resource: result}
-
-		if err := c.createBeatEvents(fetcherResult, resMetadata); err != nil {
+		if err := c.createBeatEvents(result, resMetadata); err != nil {
 			fmt.Errorf("failed to create beat events for, %v, Error: %v", metadata, err)
+
 		}
 	}
 }
 
-func (c *Transformer) createBeatEvents(resource fetchers.FetcherResult, metadata ResourceMetadata) error {
-	result, err := c.callback(c.context, resource)
+func (c *Transformer) createBeatEvents(policyResource fetchers.PolicyResource, metadata ResourceMetadata) error {
+	fetcherResult := fetchers.FetcherResult{Type: metadata.Type, Resource: policyResource.GetData()}
+	result, err := c.callback(c.context, fetcherResult)
+
 	if err != nil {
 		logp.Error(fmt.Errorf("error running the policy: %w", err))
 		return err
@@ -76,7 +77,7 @@ func (c *Transformer) createBeatEvents(resource fetchers.FetcherResult, metadata
 				"type":        metadata.Type,
 				"cycle_id":    metadata.CycleId,
 				"result":      finding.Result,
-				"resource":    resource,
+				"resource":    fetcherResult.Resource,
 				"rule":        finding.Rule,
 			},
 		}

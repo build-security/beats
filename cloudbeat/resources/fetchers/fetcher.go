@@ -18,11 +18,12 @@ type FetcherCondition interface {
 
 type PolicyResource interface {
 	GetID() string
+	GetData() interface{}
 }
 
 type FetcherResult struct {
-	Type     string         `json:"type"`
-	Resource PolicyResource `json:"resource"`
+	Type     string      `json:"type"`
+	Resource interface{} `json:"resource"`
 }
 
 type ResourceMap map[string][]PolicyResource

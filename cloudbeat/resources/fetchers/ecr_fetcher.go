@@ -42,9 +42,11 @@ func (f ECRFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 	return results, err
 }
 
+func (f ECRFetcher) Stop() {}
+
 func (res ECRResource) GetID() string {
 	return ""
 }
-
-func (f ECRFetcher) Stop() {
+func (res ECRResource) GetData() interface{} {
+	return res
 }

@@ -26,12 +26,11 @@ type cloudbeat struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	config       config.Config
-	client       beat.Client
-	data         *resources.Data
-	eval         *opa.Evaluator
-	resultsIndex string
-	transformer  transformer.Transformer
+	config      config.Config
+	client      beat.Client
+	data        *resources.Data
+	eval        *opa.Evaluator
+	transformer transformer.Transformer
 }
 
 const (

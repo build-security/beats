@@ -155,7 +155,7 @@ func (f *KubeFetcher) Stop() {
 	}
 }
 
-// addTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
+// addTypeInformationToKubeResource adds TypeMeta information to a kubernetes.Resource based upon the loaded scheme.Scheme
 // inspired by: https://github.com/kubernetes/cli-runtime/blob/v0.19.2/pkg/printers/typesetter.go#L41
 func addTypeInformationToKubeResource(resource kubernetes.Resource) error {
 	groupVersionKinds, _, err := scheme.Scheme.ObjectKinds(resource)

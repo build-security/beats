@@ -26,11 +26,10 @@ func TestFileFetcherFetchASingleFile(t *testing.T) {
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
 
-	result := results[0]
-	resourceData := result.(FileSystemResource)
-	assert.Equal(t, files[0], resourceData.FileName)
-	assert.Equal(t, "600", resourceData.FileMode)
-	assert.NotNil(t, result.GetID())
+	fsResource := results[0].(FileSystemResource)
+	assert.Equal(t, files[0], fsResource.FileName)
+	assert.Equal(t, "600", fsResource.FileMode)
+	assert.NotNil(t, fsResource.GetID())
 }
 
 func TestFileFetcherFetchTwoPatterns(t *testing.T) {
@@ -49,17 +48,15 @@ func TestFileFetcherFetchTwoPatterns(t *testing.T) {
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 2, len(results))
 
-	firstResult := results[0]
-	firstResourceData := firstResult.(FileSystemResource)
-	assert.Equal(t, outerFiles[0], firstResourceData.FileName)
-	assert.Equal(t, "600", firstResourceData.FileMode)
-	assert.NotNil(t, firstResult.GetID())
+	firstFSResource := results[0].(FileSystemResource)
+	assert.Equal(t, outerFiles[0], firstFSResource.FileName)
+	assert.Equal(t, "600", firstFSResource.FileMode)
+	assert.NotNil(t, firstFSResource.GetID())
 
-	secResult := results[1]
-	secResourceData := secResult.(FileSystemResource)
-	assert.Equal(t, outerFiles[1], secResourceData.FileName)
-	assert.Equal(t, "600", secResourceData.FileMode)
-	assert.NotNil(t, secResult.GetID())
+	secFSResource := results[1].(FileSystemResource)
+	assert.Equal(t, outerFiles[1], secFSResource.FileName)
+	assert.Equal(t, "600", secFSResource.FileMode)
+	assert.NotNil(t, secFSResource.GetID())
 }
 
 func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
@@ -78,12 +75,11 @@ func TestFileFetcherFetchDirectoryOnly(t *testing.T) {
 	assert.Nil(t, err, "Fetcher was not able to fetch files from FS")
 	assert.Equal(t, 1, len(results))
 
-	result := results[0]
-	resourceData := result.(FileSystemResource)
+	fsResource := results[0].(FileSystemResource)
 
 	expectedResult := filepath.Base(dir)
-	assert.Equal(t, expectedResult, resourceData.FileName)
-	assert.NotNil(t, result.GetID())
+	assert.Equal(t, expectedResult, fsResource.FileName)
+	assert.NotNil(t, fsResource.GetID())
 }
 
 func TestFileFetcherFetchOuterDirectoryOnly(t *testing.T) {

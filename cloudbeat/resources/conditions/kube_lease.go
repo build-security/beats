@@ -2,10 +2,13 @@ package conditions
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
 	"k8s.io/client-go/kubernetes"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -23,25 +26,24 @@ func NewLeaderLeaseProvider(ctx context.Context, client kubernetes.Interface) Le
 }
 
 func (l *leaseProvider) IsLeader() (bool, error) {
-	//leases, err := l.client.CoordinationV1().Leases("kube-system").List(l.ctx, v1.ListOptions{})
-	//if err != nil {
-	//	return false, err
-	//}
+	leases, err := l.client.CoordinationV1().Leases("kube-system").List(l.ctx, v1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
 
-	//for _, lease := range leases.Items {
-	//	if lease.Name == DefaultLeaderLeaseName {
-	//		podid := lastPart(*lease.Spec.HolderIdentity)
-	//
-	//		if podid == l.currentPodID() {
-	//			return true, nil
-	//		}
-	//
-	//		return false, nil
-	//	}
-	//}
+	for _, lease := range leases.Items {
+		if lease.Name == DefaultLeaderLeaseName {
+			podid := lastPart(*lease.Spec.HolderIdentity)
 
-	return true, nil
-	//return false, fmt.Errorf("could not find lease %v in Kube leases", DefaultLeaderLeaseName)
+			if podid == l.currentPodID() {
+				return true, nil
+			}
+
+			return false, nil
+		}
+	}
+
+	return false, fmt.Errorf("could not find lease %v in Kube leases", DefaultLeaderLeaseName)
 }
 
 func (l *leaseProvider) currentPodID() string {

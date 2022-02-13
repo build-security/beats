@@ -122,7 +122,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: add rego repo ssh key
-        path: build
+      - name: access image
         run: |
-          ls -a
+          ls -a build/distributions

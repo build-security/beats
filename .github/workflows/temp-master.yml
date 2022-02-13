@@ -20,7 +20,7 @@ env:
   AWS_ECR_REGION: ${{ secrets.AWS_ECR_REGION_DEVELOP }}
   DEV: true
   SNAPSHOT: true
-  PLATFORMS: darwin/arm64
+  PLATFORMS: linux/arm64
   TYPES: docker
 
 jobs:
@@ -131,7 +131,7 @@ jobs:
       - name: Package Elastic-Agent
         working-directory: ./x-pack/elastic-agent
         run: |
-            DEV=true SNAPSHOT=true PLATFORMS=darwin/arm64 TYPES=docker mage -v package
+            DEV=true SNAPSHOT=true PLATFORMS=linux/arm64 TYPES=docker mage -v package
 
       - name: Push to ECR
         id: ecr

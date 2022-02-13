@@ -1,4 +1,4 @@
-name: OpaBeat-CI
+name: CloudBeat-CI
 
 on:
   pull_request:
@@ -11,9 +11,9 @@ on:
 
 
 env:
-  OPABEAT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
-  OPABEAT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/opabeat
-  OPABEAT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/opabeat:${{ github.sha }}
+  CLOUDBEAT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
+  CLOUDBEAT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/cloudbeat
+  CLOUDBEAT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/cloudbeat:${{ github.sha }}
   AGENT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
   AGENT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent
   AGENT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent:${{ github.sha }}
@@ -27,8 +27,8 @@ env:
   TYPES: docker
 
 jobs:
-  build_opabeat:
-    name: OpaBeat CI
+  build_cloudbeat:
+    name: CloudBeat CI
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,12 +54,12 @@ jobs:
         run: |
           make mage
 
-      - name: Build Opabeat Bin
+      - name: Build CloudBeat Bin
         working-directory: cloudbeat
         run: |
-          GOOS=linux go build -v && docker build -t opabeat .
+          GOOS=linux go build -v && docker build -t cloudbeat .
 
-      - name: Unit Test Opabeat
+      - name: Unit Test CloudBeat
         working-directory: ./cloudbeat
         run: |
           GOOS=linux go test ./...
@@ -99,7 +99,7 @@ jobs:
       - name: Login to ECR
         uses: docker/login-action@v1
         with:
-          registry: ${{ env.OPABEAT_REGISTRY }}
+          registry: ${{ env.CLOUDBEAT_REGISTRY }}
           username: ${{ secrets.AWS_ECR_KEY_DEVELOP }}
           password: ${{ secrets.AWS_ECR_SECRET_DEVELOP }}
 
@@ -116,3 +116,13 @@ jobs:
         working-directory: x-pack/elastic-agent
         run: |
           DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
+
+  E2E_test:
+    name: End-to-End Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: add rego repo ssh key
+        path: build
+        run: |
+          ls -a

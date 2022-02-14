@@ -129,12 +129,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v2
+
       - name: Download agent-package
         uses: actions/cache@v2
         id: restore-build
         with:
           path: ./build/distributions/*
           key: ${{ github.sha }}
+
+      - name: Access Package
         run: |
           ls .
           ls -a build/distributions

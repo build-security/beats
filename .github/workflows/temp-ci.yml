@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: add rego repo ssh key
+      - name: Add rego repo ssh key
         uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo.
         with:
           ssh-private-key: |
@@ -35,12 +35,12 @@ jobs:
         with:
           go-version: 1.17.2
 
-      - name: Build CloudBeat Bin
+      - name: Docker build Cloudbeat
         working-directory: ./cloudbeat
         run: |
           GOOS=linux go build -v && docker build -t cloudbeat .
 
-      - name: Unit Test CloudBeat
+      - name: Unit-Test Cloudbeat
         working-directory: ./cloudbeat
         run: |
           GOOS=linux go test ./...
@@ -95,7 +95,11 @@ jobs:
 
       - name: Deploy cloudbeat
         run: |
-          kubectl apply -f deploy/k8s/cloudbeat-ds.yaml -n kube-system
+          kubectl apply -f cloudbeat/deploy/k8s/cloudbeat-ds.yaml -n kube-system
+
+      - name: Get ES indices
+        run: |
+          curl -X GET "localhost:9200/_cat/indices/"
 
 #
 #  e2e_test:

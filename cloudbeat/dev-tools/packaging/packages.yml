@@ -71,7 +71,7 @@ specs:
         <<: *elastic_license_for_binaries
 
     - os: linux
-      arch: amd64
+      arch: arm64
       types: [tgz]
       spec:
         <<: *unix_binary_spec

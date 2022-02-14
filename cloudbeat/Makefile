@@ -23,7 +23,7 @@ delete-pod:
 	kubectl delete pod cloudbeat-demo
 
 build-docker:
-	GOOS=linux go build && docker build -t cloudbeat .
+	GOOS=linux GOARCH=arm64 go build && docker build -t cloudbeat .
 
 docker-image-load-minikube: build-docker
 	minikube image load cloudbeat:latest

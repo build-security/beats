@@ -124,7 +124,8 @@ jobs:
           path: ./build/distributions/*
           key: ${{ github.sha }}
 
-  E2E_test:
+  e2e_test:
+    needs: build_elastic_agent
     name: End-to-End Test
     runs-on: ubuntu-latest
     timeout-minutes: 10

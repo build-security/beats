@@ -115,17 +115,13 @@ jobs:
       - name: Package Elastic-Agent
         working-directory: x-pack/elastic-agent
         run: |
-          DEV=true SNAPSHOT=true PLATFORMS=linux/amd64 TYPES=docker mage -v package
-
-      - name: access image
-        run: |
-          ls -a build/distributions
+          DEV=${{ env.DEV }} SNAPSHOT=${{ env.SNAPSHOT }} PLATFORMS=${{ env.PLATFORMS }} TYPES=${{ env.TYPES }} mage -v package
 
       - name: Upload Package
         uses: actions/upload-artifact@v2
         with:
           name: agent-package
-          path: build/distributions/*
+          path: build/distributions/elastic-agent-8.1.0-SNAPSHOT-amd64.deb
 
   E2E_test:
     name: End-to-End Test

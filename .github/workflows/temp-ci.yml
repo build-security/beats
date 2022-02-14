@@ -112,7 +112,7 @@ jobs:
           curl --verbose --show-error http://localhost:9200
 
       - name: Setup Kind
-        uses: engineerd/setup-kind@v0.5.0
+        uses: helm/kind-action@v1.2.0
         with:
           skipClusterCreation: true
 

@@ -53,10 +53,9 @@ jobs:
             kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/cloudbeat-ds.yaml
 
       - name: Cache Cloudbeat
-        working-directory: ./cloudbeat
         uses: actions/cache@v2
         with:
-          path: cloudbeat
+          path: ./cloudbeat/cloudbeat
           key: ${{ github.sha }}
 
   e2e_test:

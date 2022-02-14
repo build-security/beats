@@ -100,7 +100,7 @@ jobs:
       - name: Get cloudbeat logs
         run: |
           kubectl wait --for=condition=ready pod --selector="k8s-app=cloudbeat" -n kube-system
-          timeout 100 kubectl logs -f --selector="k8s-app=cloudbeat" -n kube-system
+          timeout 30 kubectl logs -f --selector="k8s-app=cloudbeat" -n kube-system
 
       - name: Get ES indices
         run: |

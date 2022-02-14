@@ -17,11 +17,11 @@ jobs:
   build_cloudbeat:
     name: CloudBeat CI
     runs-on: ubuntu-latest
-    working-directory: ./cloudbeat
     timeout-minutes: 15
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+          path: ./cloudbeat
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -64,6 +64,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
+          path: ./cloudbeat
 
       - name: Get cloudbeat from cache
         uses: actions/cache@v2

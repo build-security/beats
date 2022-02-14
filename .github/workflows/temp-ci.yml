@@ -115,7 +115,16 @@ jobs:
       - name: Package Elastic-Agent
         working-directory: x-pack/elastic-agent
         run: |
-          DEV=${{ env.DEV }} SNAPSHOT=${{ env.SNAPSHOT }} PLATFORMS=${{ env.PLATFORMS }} TYPES=${{ env.TYPES }} mage -v package
+          DEV=${{ env.DEV }} SNAPSHOT=${{ env.SNAPSHOT }} PLATFORMS=${{ env.PLATFORMS }} TYPES=${{ env.TYPES }} mage package
+
+      - name: Access Package
+        run: |
+          ls .
+          echo "============================================================================"
+          ls ./build
+          echo "============================================================================"
+          ls ./build/distributions
+          echo "============================================================================"
 
       - name: Cache Elastic-Agent
         uses: actions/cache@v2
@@ -142,4 +151,7 @@ jobs:
       - name: Access Package
         run: |
           ls .
-          ls -a build/distributions
+          echo "============================================================================"
+          ls ./build
+          echo "============================================================================"
+          ls ./build/distributions

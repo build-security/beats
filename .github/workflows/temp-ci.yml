@@ -72,7 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out Cloudbeat
+        uses: actions/checkout@v2
         with:
           path: ./cloudbeat
 
@@ -109,7 +110,7 @@ jobs:
 
       - name: Setup Kind Cluster
         run: |
-          kind create cluster --config cloudbeat/deploy/k8s/kind/kind-config.yaml
+          kind create cluster --config /deploy/k8s/kind/kind-config.yaml
 
       - name: Load cloudbeat image
         run: |

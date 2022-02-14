@@ -84,7 +84,7 @@ jobs:
           key: ${{ github.sha }}
 
   e2e_test:
-    needs: build_elastic_agent
+    needs: build_cloudbeat
     name: End-to-End Test
     runs-on: ubuntu-latest
     timeout-minutes: 10

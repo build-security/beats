@@ -97,27 +97,12 @@ jobs:
         with:
           stack-version: 8.1.0-SNAPSHOT
 
-      - name: Elasticsearch is reachable
+      - name: Ensure Elasticsearch is reachable
         run: |
           curl --verbose --show-error http://localhost:9200
 
       - name: Setup Kind
         uses: helm/kind-action@v1.2.0
-        with:
-          skipClusterCreation: true
-
-      - name: toDelete
-        run: |
-          echo "============================= ls . ============================="
-          ls .
-          echo "============================= ls ./cloudbeat ============================="
-          ls ./cloudbeat
-          echo "============================= ls ./cloudbeat/deploy ============================="
-          ls ./cloudbeat/deploy
-          echo "============================= ls ./cloudbeat/deploy/k8s ============================="
-          ls ./cloudbeat/deploy/k8s
-          echo "============================= ls ./cloudbeat/deploy/k8s/kind ============================="
-          ls ./cloudbeat/deploy/k8s/kind
 
       - name: Setup Kind Cluster
         run: |
@@ -125,6 +110,7 @@ jobs:
 
       - name: Load cloudbeat image
         run: |
+          docker load cloudbeat/cloudbeat
           kind load docker-image cloudbeat:latest --name kind-mono
 
       - name: Deploy cloudbeat

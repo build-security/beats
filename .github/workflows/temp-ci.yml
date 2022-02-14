@@ -21,6 +21,7 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+        with:
           path: ./cloudbeat
 
       - name: Set up Go
@@ -64,6 +65,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
+        with:
           path: ./cloudbeat
 
       - name: Get cloudbeat from cache

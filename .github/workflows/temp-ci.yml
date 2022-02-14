@@ -42,8 +42,6 @@ jobs:
 
       - name: Check out the repo
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -78,59 +76,11 @@ jobs:
           command: |
             echo "Run kubeval"
             kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/cloudbeat-ds.yaml
-  build_elastic_agent:
-    name: Elastic-Agent CI
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - name: add rego repo ssh key
-        uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repo.
-        with:
-          ssh-private-key: |
-            ${{ secrets.REGO_LIB_KEY }}
-          repo-mappings: |
-            github.com/elastic/csp-security-policies
 
-      - name: Check out the repo
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Login to ECR
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.CLOUDBEAT_REGISTRY }}
-          username: ${{ secrets.AWS_ECR_KEY_DEVELOP }}
-          password: ${{ secrets.AWS_ECR_SECRET_DEVELOP }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17.2
-
-      - name: Setup Mage
-        run: |
-          make mage
-
-      - name: Package Elastic-Agent
-        working-directory: x-pack/elastic-agent
-        run: |
-          DEV=${{ env.DEV }} SNAPSHOT=${{ env.SNAPSHOT }} PLATFORMS=${{ env.PLATFORMS }} TYPES=${{ env.TYPES }} mage package
-
-      - name: Access Package
-        run: |
-          ls .
-          echo "============================================================================"
-          ls ./build
-          echo "============================================================================"
-          ls ./build/distributions
-          echo "============================================================================"
-
-      - name: Cache Elastic-Agent
+      - name: Cache Cloudbeat
         uses: actions/cache@v2
-        id: restore-build
         with:
-          path: ./build/distributions/*
+          path: ./cloudbeat
           key: ${{ github.sha }}
 
   e2e_test:
@@ -141,17 +91,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Download agent-package
+      - name: Access cloudbeat
+        run: |
+          ls ./cloudbeat
+
+      - name: Get cloudbeat from cache
         uses: actions/cache@v2
-        id: restore-build
         with:
-          path: ./build/distributions/*
+          path: ./cloudbeat
           key: ${{ github.sha }}
 
-      - name: Access Package
+      - name: Access cloudbeat after cache
         run: |
-          ls .
-          echo "============================================================================"
-          ls ./build
-          echo "============================================================================"
-          ls ./build/distributions
+          ls ./cloudbeat

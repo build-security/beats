@@ -99,7 +99,7 @@ jobs:
 
       - name: Get ES indices
         run: |
-          curl -X GET "localhost:9200/_cat/indices/"
+          curl -X GET "localhost:9200/_cat/indices/?v&s=index&pretty"
 
 #
 #  e2e_test:

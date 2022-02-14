@@ -11,12 +11,6 @@ on:
 
 
 env:
-  CLOUDBEAT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
-  CLOUDBEAT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/cloudbeat
-  CLOUDBEAT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/cloudbeat:${{ github.sha }}
-  AGENT_REGISTRY: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com
-  AGENT_IMAGE_BASE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent
-  AGENT_IMAGE: ${{ secrets.AWS_ECR_ID_DEVELOP }}.dkr.ecr.${{ secrets.AWS_ECR_REGION_DEVELOP }}.amazonaws.com/elastic-agent:${{ github.sha }}
   AWS_ECR_KEY: ${{ secrets.AWS_ECR_KEY_DEVELOP }}
   AWS_ECR_SECRET: ${{ secrets.AWS_ECR_SECRET_DEVELOP }}
   AWS_ECR_REGION: ${{ secrets.AWS_ECR_REGION_DEVELOP }}
@@ -91,18 +85,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Access kind-config.yaml
-        run: |
-          echo "============================== . =============================================="
-          ls .
-          echo "============================== ./deploy =============================================="
-          ls ./deploy
-          echo "============================== ./deploy/k8s =============================================="
-          ls ./deploy/k8s
-          echo "============================== ./deploy/k8s/kind =============================================="
-          ls ./deploy/k8s/kind
-
-
       - name: Get cloudbeat from cache
         uses: actions/cache@v2
         with:
@@ -143,7 +125,7 @@ jobs:
 
       - name: Setup Kind Cluster
         run: |
-          kind create cluster --config deploy/k8s/kind/kind-config.yaml
+          kind create cluster --config cloudbeat/deploy/k8s/kind/kind-config.yaml
 
       - name: Load cloudbeat image
         run: |

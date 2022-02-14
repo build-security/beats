@@ -118,13 +118,15 @@ jobs:
 
       - name: Setup Kind
         uses: engineerd/setup-kind@v0.5.0
+        with:
+          skipClusterCreation: true
 
-      - name: Test Kind
-        run: |
-          kubectl cluster-info
-          kubectl get pods -n kube-system
-          echo "current-context:" $(kubectl config current-context)
-          echo "environment-kubeconfig:" ${KUBECONFIG}
+#      - name: Test Kind
+#        run: |
+#          kubectl cluster-info
+#          kubectl get pods -n kube-system
+#          echo "current-context:" $(kubectl config current-context)
+#          echo "environment-kubeconfig:" ${KUBECONFIG}
 
       - name: Setup Kind Cluster
         run: |

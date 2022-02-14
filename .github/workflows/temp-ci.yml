@@ -100,7 +100,6 @@ jobs:
         run: |
           ls -a ./cloudbeat/cloudbeat
 
-      - name: Start Elasticsearch
       - name: Configure sysctl limits
         run: |
           sudo swapoff -a

@@ -107,11 +107,22 @@ jobs:
           sudo sysctl -w vm.swappiness=1
           sudo sysctl -w fs.file-max=262144
           sudo sysctl -w vm.max_map_count=262144
+
       - name: Start Elasticsearch
         uses: elastic/elastic-github-actions/elasticsearch@master
         with:
           stack-version: 8.1.0-SNAPSHOT
 
       - name: Elasticsearch is reachable
-          run: |
-            curl --verbose --show-error http://localhost:9200
+        run: |
+          curl --verbose --show-error http://localhost:9200
+
+      - name: Setup Kind
+        uses: engineerd/setup-kind@v0.5.0
+
+      - name: Test Kind
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+          echo "current-context:" $(kubectl config current-context)
+          echo "environment-kubeconfig:" ${KUBECONFIG}

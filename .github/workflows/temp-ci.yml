@@ -60,30 +60,11 @@ jobs:
             echo "Run kubeval"
             kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/cloudbeat-ds.yaml
 
-      - name: Cache Cloudbeat
-        uses: actions/cache@v2
-        with:
-          path: ./cloudbeat/cloudbeat
-          key: ${{ github.sha }}
-
-  e2e_test:
-    needs: build_cloudbeat
-    name: End-to-End Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Check out Cloudbeat
-        uses: actions/checkout@v2
-
-      - name: Get cloudbeat from cache
-        uses: actions/cache@v2
-        with:
-          path: ./cloudbeat/cloudbeat
-          key: ${{ github.sha }}
-
-      - name: Access cloudbeat after cache
-        run: |
-          ls -a ./cloudbeat/cloudbeat
+#      - name: Cache Cloudbeat
+#        uses: actions/cache@v2
+#        with:
+#          path: ./cloudbeat/cloudbeat
+#          key: ${{ github.sha }}
 
       - name: Configure sysctl limits
         run: |
@@ -110,9 +91,60 @@ jobs:
 
       - name: Load cloudbeat image
         run: |
-          docker load cloudbeat/cloudbeat
           kind load docker-image cloudbeat:latest --name kind-mono
 
       - name: Deploy cloudbeat
         run: |
           kubectl apply -f deploy/k8s/cloudbeat-ds.yaml -n kube-system
+
+#
+#  e2e_test:
+#    needs: build_cloudbeat
+#    name: End-to-End Test
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 10
+#    steps:
+#      - name: Check out Cloudbeat
+#        uses: actions/checkout@v2
+#
+#      - name: Get cloudbeat from cache
+#        uses: actions/cache@v2
+#        with:
+#          path: ./cloudbeat/cloudbeat
+#          key: ${{ github.sha }}
+#
+#      - name: Access cloudbeat after cache
+#        run: |
+#          ls -a ./cloudbeat/cloudbeat
+#
+#      - name: Configure sysctl limits
+#        run: |
+#          sudo swapoff -a
+#          sudo sysctl -w vm.swappiness=1
+#          sudo sysctl -w fs.file-max=262144
+#          sudo sysctl -w vm.max_map_count=262144
+#
+#      - name: Start Elasticsearch
+#        uses: elastic/elastic-github-actions/elasticsearch@master
+#        with:
+#          stack-version: 8.1.0-SNAPSHOT
+#
+#      - name: Ensure Elasticsearch is reachable
+#        run: |
+#          curl --verbose --show-error http://localhost:9200
+#
+#      - name: Setup Kind
+#        uses: helm/kind-action@v1.2.0
+#
+#      - name: Setup Kind Cluster
+#        run: |
+#          kind create cluster --config cloudbeat/deploy/k8s/kind/kind-config.yaml
+#
+#      - name: Load cloudbeat image
+#        run: |
+#          docker load cloudbeat/cloudbeat
+#          kind load docker-image cloudbeat:latest --name kind-mono
+#
+#      - name: Deploy cloudbeat
+#        run: |
+#          kubectl apply -f deploy/k8s/cloudbeat-ds.yaml -n kube-system

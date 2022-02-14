@@ -7,7 +7,7 @@ on:
 
 
 env:
-  K8S_MANIFEST_DIR: /deploy/k8s
+  K8S_MANIFEST_DIR: cloudbeat/deploy/k8s
   DEV: true
   SNAPSHOT: true
   PLATFORMS: linux/amd64
@@ -21,8 +21,6 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-        with:
-          path: ./cloudbeat
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -30,10 +28,12 @@ jobs:
           go-version: 1.17.2
 
       - name: Build CloudBeat Bin
+        working-directory: ./cloudbeat
         run: |
           GOOS=linux go build -v && docker build -t cloudbeat .
 
       - name: Unit Test CloudBeat
+        working-directory: ./cloudbeat
         run: |
           GOOS=linux go test ./...
 
@@ -53,6 +53,7 @@ jobs:
             kubeval --strict ${{ env.K8S_MANIFEST_DIR }}/cloudbeat-ds.yaml
 
       - name: Cache Cloudbeat
+        working-directory: ./cloudbeat
         uses: actions/cache@v2
         with:
           path: cloudbeat

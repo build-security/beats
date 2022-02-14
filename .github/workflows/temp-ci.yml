@@ -74,13 +74,11 @@ jobs:
     steps:
       - name: Check out Cloudbeat
         uses: actions/checkout@v2
-        with:
-          path: ./cloudbeat
 
       - name: Get cloudbeat from cache
         uses: actions/cache@v2
         with:
-          path: ./cloudbeat
+          path: ./cloudbeat/cloudbeat
           key: ${{ github.sha }}
 
       - name: Access cloudbeat after cache
@@ -108,9 +106,22 @@ jobs:
         with:
           skipClusterCreation: true
 
+      - name: toDelete
+        run: |
+          echo "============================= ls . ============================="
+          ls .
+          echo "============================= ls ./cloudbeat ============================="
+          ls ./cloudbeat
+          echo "============================= ls ./cloudbeat/deploy ============================="
+          ls ./cloudbeat/deploy
+          echo "============================= ls ./cloudbeat/deploy/k8s ============================="
+          ls ./cloudbeat/deploy/k8s
+          echo "============================= ls ./cloudbeat/deploy/k8s/kind ============================="
+          ls ./cloudbeat/deploy/k8s/kind
+
       - name: Setup Kind Cluster
         run: |
-          kind create cluster --config /deploy/k8s/kind/kind-config.yaml
+          kind create cluster --config cloudbeat/deploy/k8s/kind/kind-config.yaml
 
       - name: Load cloudbeat image
         run: |

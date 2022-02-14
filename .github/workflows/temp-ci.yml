@@ -125,3 +125,15 @@ jobs:
           kubectl get pods -n kube-system
           echo "current-context:" $(kubectl config current-context)
           echo "environment-kubeconfig:" ${KUBECONFIG}
+
+      - name: Setup Kind Cluster
+        run: |
+          kind create cluster --config deploy/k8s/kind/kind-config.yaml
+
+      - name: Load cloudbeat image
+        run: |
+          kind load docker-image cloudbeat:latest --name kind-mono
+
+      - name: Deploy cloudbeat
+        run: |
+          kubectl apply -f deploy/k8s/cloudbeat-ds.yaml -n kube-system

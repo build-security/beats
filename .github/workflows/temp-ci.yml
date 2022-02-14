@@ -97,6 +97,10 @@ jobs:
         run: |
           kubectl apply -f cloudbeat/deploy/k8s/cloudbeat-ds.yaml -n kube-system
 
+      - name: Get cloudbeat logs
+        run: |
+          timeout 1 kubectl logs -f --selector="k8s-app=cloudbeat" -n kube-system
+
       - name: Get ES indices
         run: |
           curl -X GET "localhost:9200/_cat/indices/?v&s=index&pretty"

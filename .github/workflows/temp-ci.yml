@@ -90,11 +90,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-
-      - name: Access cloudbeat
-        run: |
-          ls ./cloudbeat
-
       - name: Get cloudbeat from cache
         uses: actions/cache@v2
         with:
@@ -103,4 +98,20 @@ jobs:
 
       - name: Access cloudbeat after cache
         run: |
-          ls ./cloudbeat
+          ls -a ./cloudbeat/cloudbeat
+
+      - name: Start Elasticsearch
+      - name: Configure sysctl limits
+        run: |
+          sudo swapoff -a
+          sudo sysctl -w vm.swappiness=1
+          sudo sysctl -w fs.file-max=262144
+          sudo sysctl -w vm.max_map_count=262144
+      - name: Start Elasticsearch
+        uses: elastic/elastic-github-actions/elasticsearch@master
+        with:
+          stack-version: 8.1.0-SNAPSHOT
+
+      - name: Elasticsearch is reachable
+          run: |
+            curl --verbose --show-error http://localhost:9200

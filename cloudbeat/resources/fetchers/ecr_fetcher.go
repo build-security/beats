@@ -44,6 +44,7 @@ func (f ECRFetcher) Fetch(ctx context.Context) ([]PolicyResource, error) {
 
 func (f ECRFetcher) Stop() {}
 
+//TODO: Add resource id logic to all AWS resources
 func (res ECRResource) GetID() string {
 	return ""
 }

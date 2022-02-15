@@ -2,6 +2,8 @@ package fetchers
 
 import (
 	"context"
+	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/user"
 	"strconv"
@@ -42,35 +44,38 @@ func (f *FileSystemFetcher) Fetch(ctx context.Context) ([]PolicyResource, error)
 			logp.Err("Failed to find matched glob for %s, error - %+v", filePattern, err)
 		}
 		for _, file := range matchedFiles {
-			resource := f.fetchSystemResource(file)
+			resource, err := f.fetchSystemResource(file)
+			if err != nil {
+				logp.Err("Unable to fetch fileSystemResource for file: %v", file)
+				continue
+			}
 			results = append(results, resource)
 		}
 	}
 	return results, nil
 }
 
-func (f *FileSystemFetcher) fetchSystemResource(filePath string) FileSystemResource {
+func (f *FileSystemFetcher) fetchSystemResource(filePath string) (FileSystemResource, error) {
 
 	info, err := os.Stat(filePath)
 	if err != nil {
-		logp.Err("Failed to fetch %s, error - %+v", filePath, err)
-		return FileSystemResource{}
+		err := fmt.Errorf("failed to fetch %s, error - %+v", filePath, err)
+		return FileSystemResource{}, err
 	}
-	resourceInfo := FromFileInfo(info, filePath)
+	resourceInfo, _ := FromFileInfo(info, filePath)
 
-	return resourceInfo
+	return resourceInfo, nil
 }
 
-func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
+func FromFileInfo(info os.FileInfo, path string) (FileSystemResource, error) {
 
 	if info == nil {
-		return FileSystemResource{}
+		return FileSystemResource{}, nil
 	}
 
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
-		logp.Err("Not a syscall.Stat_t")
-		return FileSystemResource{}
+		return FileSystemResource{}, errors.New("Not a syscall.Stat_t")
 	}
 
 	uid := stat.Uid
@@ -91,7 +96,7 @@ func FromFileInfo(info os.FileInfo, path string) FileSystemResource {
 		Inode:    inode,
 	}
 
-	return data
+	return data, nil
 }
 
 func (f *FileSystemFetcher) Stop() {

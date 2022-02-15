@@ -27,8 +27,6 @@ spec:
       - name: cloudbeat
         image: cloudbeat:latest
         imagePullPolicy: IfNotPresent
-        extra_hosts:
-          - "host.docker.internal:host-gateway"
         env:
         - name: ES_HOST
           value: "host.docker.internal:9200"

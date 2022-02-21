@@ -7,7 +7,8 @@ processors:
   - add_cloud_metadata: ~
 {{- if .UseDockerMetadataProcessor }}
   - add_docker_metadata: ~{{ end }}
-
+{{- if .UseAddClusterIdProcessor }}
+  - add_cluster_id: ~{{ end }}
 {{- if .UseKubernetesMetadataProcessor }}
   - add_kubernetes_metadata: ~
 {{- else -}}

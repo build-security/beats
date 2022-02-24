@@ -8,12 +8,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/osquery/osquery-go"
 	"sync"
 	"time"
 
 	"github.com/gofrs/uuid"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/osquery/osquery-go"
 	kconfig "github.com/osquery/osquery-go/plugin/config"
 	klogger "github.com/osquery/osquery-go/plugin/logger"
 	"golang.org/x/sync/errgroup"
@@ -369,5 +369,3 @@ func (bt *osquerybeat) unregisterActionHandler(b *beat.Beat, ah *actionHandler) 
 		b.Manager.UnregisterAction(ah)
 	}
 }
-
-// ToDo Copy regsiterAction Handler to cloudbeat

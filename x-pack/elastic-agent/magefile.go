@@ -19,7 +19,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 
@@ -308,7 +307,7 @@ func Package() {
 	}{
 		{"darwin/amd64", "darwin-x86_64.tar.gz"},
 		{"linux/amd64", "linux-x86_64.tar.gz"},
-		{"linux/arm64", "linux-aarch64.tar.gz"},
+		{"linux/arm64", "linux-arm64.tar.gz"},
 		{"windows/amd64", "windows-x86_64.zip"},
 	}
 
@@ -595,7 +594,7 @@ func packageAgent(requiredPackages []string, packagingFn func()) {
 		defer os.RemoveAll(dropPath)
 		defer os.Unsetenv(agentDropPath)
 
-		packedBeats := []string{"filebeat", "heartbeat", "cloudbeat", "metricbeat"}
+		packedBeats := []string{"filebeat", "heartbeat", "metricbeat", "osquerybeat", "cloudbeat"}
 
 		for _, b := range packedBeats {
 			pwd, err := filepath.Abs(filepath.Join("..", b))

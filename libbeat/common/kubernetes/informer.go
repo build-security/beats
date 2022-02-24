@@ -61,7 +61,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "pod"
-
 	case *Event:
 		e := client.CoreV1().Events(opts.Namespace)
 		listwatch = &cache.ListWatch{
@@ -74,7 +73,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "event"
-
 	case *Node:
 		n := client.CoreV1().Nodes()
 		listwatch = &cache.ListWatch{
@@ -89,7 +87,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "node"
-
 	case *Namespace:
 		ns := client.CoreV1().Namespaces()
 		listwatch = &cache.ListWatch{
@@ -104,7 +101,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "namespace"
-
 	case *Deployment:
 		d := client.AppsV1().Deployments(opts.Namespace)
 		listwatch = &cache.ListWatch{
@@ -117,7 +113,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "deployment"
-
 	case *ReplicaSet:
 		rs := client.AppsV1().ReplicaSets(opts.Namespace)
 		listwatch = &cache.ListWatch{
@@ -130,7 +125,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "replicaset"
-
 	case *StatefulSet:
 		ss := client.AppsV1().StatefulSets(opts.Namespace)
 		listwatch = &cache.ListWatch{
@@ -143,7 +137,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "statefulset"
-
 	case *Service:
 		svc := client.CoreV1().Services(opts.Namespace)
 		listwatch = &cache.ListWatch{
@@ -168,20 +161,6 @@ func NewInformer(client kubernetes.Interface, resource Resource, opts WatchOptio
 		}
 
 		objType = "cronjob"
-
-	case *Secret:
-		s := client.CoreV1().Secrets(opts.Namespace)
-		listwatch = &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return s.List(ctx, options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return s.Watch(ctx, options)
-			},
-		}
-
-		objType = "secret"
-
 	case *Job:
 		job := client.BatchV1().Jobs(opts.Namespace)
 		listwatch = &cache.ListWatch{

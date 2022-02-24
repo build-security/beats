@@ -76,9 +76,6 @@ type StatefulSet = appsv1.StatefulSet
 // Service data
 type Service = v1.Service
 
-// Secret data
-type Secret = v1.Secret
-
 // Job data
 type Job = batchv1.Job
 

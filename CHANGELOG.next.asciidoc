@@ -50,30 +50,6 @@ https://github.com/elastic/beats/compare/v7.0.0-alpha2...main[Check the HEAD dif
 
 *Filebeat*
 
-- aws-s3: Stop trying to increase SQS message visibility after ReceiptHandleIsInvalid errors. {pull}29480[29480]
-- Fix handling of IPv6 addresses in netflow flow events. {issue}19210[19210] {pull}29383[29383]
-- Fix `sophos` KV splitting and syslog header handling {issue}24237[24237] {pull}29331[29331]
-- Undo deletion of endpoint config from cloudtrail fileset in {pull}29415[29415]. {pull}29450[29450]
-- Make Cisco ASA and FTD modules conform to the ECS definition for event.outcome and event.type. {issue}29581[29581] {pull}29698[29698]
-- ibmmq: Fixed `@timestamp` not being populated with correct values. {pull}29773[29773]
-- Fix using log_group_name_prefix in aws-cloudwatch input. {pull}29695[29695]
-- aws-s3: Improve gzip detection to avoid false negatives. {issue}29968[29968]
-- decode_cef: Fix panic when recovering from invalid CEF extensions that contain escape characters. {issue}30010[30010]
-
-*Heartbeat*
-
-- Fix race condition in http monitors using `mode:all` that can cause crashes. {pull}29697[pull]
-- Fix broken ICMP availability check that prevented heartbeat from starting in rare cases. {pull}29413[pull]
-
-*Metricbeat*
-
-- Use xpack.enabled on SM modules to write into .monitoring indices when using Metricbeat standalone {pull}28365[28365]
-- Fix in rename processor to ingest metrics for `write.iops` to proper field instead of `write_iops` in rds metricset. {pull}28960[28960]
-- Enhance filter check in kubernetes event metricset. {pull}29470[29470]
-- Fix gcp metrics metricset apply aligner to all metric_types {pull}29514[29513]
-- Extract correct index property in kibana.stats metricset {pull}29622[29622]
-- Fixed bug with `elasticsearch/cluster_stats` metricset not recording license expiration date correctly. {pull}29711[29711]
-- Fixed GCP GKE Overview dashboard {pull}29913[29913]
 - Report the starting offset of the line in `log.offset` when using `filestream` instead of the end to be ECS compliant. {pull}30445[30445]
 - auditd: Prevent mapping explosion when truncated EXECVE records are ingested. {pull}30382[30382]
 - elasticsearch: fix duplicate ingest when using a common appender configuration {issue}30428[30428] {pull}30440[30440]

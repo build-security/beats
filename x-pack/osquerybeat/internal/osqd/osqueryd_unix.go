@@ -17,8 +17,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	extensionName = "osquery-extension.ext"
+var (
+	extensionNames = []string{
+		"osquery-extension.ext",
+		"kubequery.ext",
+	}
 )
 
 func CreateSocketPath() (string, func(), error) {

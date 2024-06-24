@@ -15,8 +15,11 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const (
-	extensionName = "osquery-extension.exe"
+var (
+	extensionNames = []string{
+		"osquery-extension.exe",
+		"kubequery.exe",
+	}
 )
 
 func CreateSocketPath() (string, func(), error) {

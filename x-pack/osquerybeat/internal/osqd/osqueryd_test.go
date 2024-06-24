@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/elastic/beats/v7/libbeat/common"
@@ -60,8 +61,10 @@ func TestNew(t *testing.T) {
 func TestVerifyAutoloadFileMissing(t *testing.T) {
 	dir := uuid.Must(uuid.NewV4()).String()
 	extensionAutoloadPath := filepath.Join(dir, osqueryAutoload)
-	mandatoryExtensionPath := filepath.Join(dir, extensionName)
-	err := verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath)
+
+	mandatoryExtensionPaths := extensionPaths(dir)
+
+	err := verifyAutoloadFile(extensionAutoloadPath, mandatoryExtensionPaths)
 	if !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("expected error: %v, got: %v", os.ErrNotExist, err)
 	}
@@ -77,12 +80,16 @@ func TestPrepareAutoloadFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
-	mandatoryExtensionPath := filepath.Join(dir, extensionName)
+
+	mandatoryExtensionPaths := extensionPaths(dir)
+	extensionsPathsBytes := []byte(strings.Join(mandatoryExtensionPaths, "\n"))
 
 	// Write fake extension file for testing
-	err = ioutil.WriteFile(mandatoryExtensionPath, nil, 0644)
-	if err != nil {
-		t.Fatal(err)
+	for _, path := range mandatoryExtensionPaths {
+		err = ioutil.WriteFile(path, nil, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	randomContent := func(sz int) []byte {
@@ -103,7 +110,7 @@ func TestPrepareAutoloadFile(t *testing.T) {
 		},
 		{
 			Name:        "File with mandatory extension",
-			FileContent: []byte(mandatoryExtensionPath),
+			FileContent: extensionsPathsBytes,
 		},
 		{
 			Name:        "Missing mandatory extension, should restore the file",
@@ -111,7 +118,7 @@ func TestPrepareAutoloadFile(t *testing.T) {
 		},
 		{
 			Name:        "User extension path doesn't exists",
-			FileContent: []byte(mandatoryExtensionPath + "\n" + filepath.Join(dir, "foobar.ext")),
+			FileContent: append(extensionsPathsBytes, []byte("\n"+filepath.Join(dir, "foobar.ext"))...),
 		},
 		{
 			Name:        "Random garbage",
@@ -137,7 +144,7 @@ func TestPrepareAutoloadFile(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = prepareAutoloadFile(extensionAutoloadPath, mandatoryExtensionPath, validLogger)
+			err = prepareAutoloadFile(extensionAutoloadPath, mandatoryExtensionPaths, validLogger)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -151,9 +158,9 @@ func TestPrepareAutoloadFile(t *testing.T) {
 			scanner := bufio.NewScanner(f)
 			for i := 0; scanner.Scan(); i++ {
 				line := scanner.Text()
-				if i == 0 {
-					if line != mandatoryExtensionPath {
-						t.Fatalf("expected the fist line of the file to be: %v , got: %v", mandatoryExtensionPath, line)
+				if i < 0 {
+					if line != mandatoryExtensionPaths[i] {
+						t.Fatalf("expected line %d of the file to be: %v , got: %v", i, mandatoryExtensionPaths[i], line)
 					}
 				}
 				// Check that it is a valid path to the file on the disk
